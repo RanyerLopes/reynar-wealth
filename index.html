@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Reynar Wealth</title>
+
+  <!-- PWA Setup -->
+  <meta name="theme-color" content="#000000" />
+  <meta name="background_color" content="#000000" />
+  <meta name="description" content="Você deixa de ser escravo das contas e passa a ser o Rei delas." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Reynar" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="/crown.svg" />
+  <link rel="apple-touch-icon" href="/crown-icon.png" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: '#000000', // PURE BLACK
+            surface: '#0a0a0a', // Almost Black
+            surfaceHighlight: '#18181b', // Zinc 900 (Darker borders)
+            primary: '#7c3aed', // Violet 600 (Slightly deeper purple)
+            secondary: '#059669', // Emerald 600 (Slightly deeper green)
+            danger: '#e11d48', // Rose 600 (Slightly deeper red)
+            textMain: '#e4e4e7', // Zinc 200 (Slightly softer white for eye comfort)
+            textMuted: '#71717a', // Zinc 500 (Darker grey text)
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            'scale-up': 'scaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'blob': 'blob 10s infinite',
+            'float': 'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(40px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            scaleUp: {
+              '0%': { transform: 'scale(0.8)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            },
+            blob: {
+              '0%': { transform: 'translate(0px, 0px) scale(1)' },
+              '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+              '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+              '100%': { transform: 'translate(0px, 0px) scale(1)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-20px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Reset Global para comportamento Nativo */
+    body {
+      overscroll-behavior-y: none;
+      /* Previne o 'bounce' do navegador ao rolar */
+      -webkit-tap-highlight-color: transparent;
+      /* Remove a caixa azul ao clicar no Android */
+      -webkit-touch-callout: none;
+      /* Desabilita menu de toque longo no iOS */
+      user-select: none;
+      /* Desabilita seleção de texto (comum em apps) */
+    }
+
+    /* Reabilitar seleção apenas em inputs */
+    input,
+    textarea {
+      user-select: text;
+      background-color: #0a0a0a !important;
+      /* Force dark inputs */
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 10px;
+    }
+
+    /* Hide scrollbar for clean mobile look */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Safe Area Utilities */
+    .safe-area-top {
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .safe-area-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* COIN EXPLOSION ANIMATION KEYFRAMES */
+    @keyframes coin-float {
+      0% {
+        transform: translate(0, 0) rotate(0deg) scale(0.5);
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(var(--tx), var(--ty)) rotate(var(--r)) scale(1);
+        opacity: 0;
+      }
+    }
+
+    .coin-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      font-size: 24px;
+      animation: coin-float 1s ease-out forwards;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "date-fns": "https://aistudiocdn.com/date-fns@^4.1.0",
+    "date-fns/": "https://aistudiocdn.com/date-fns@^4.1.0/"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+
+<body class="bg-background text-textMain antialiased overflow-hidden select-none">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>

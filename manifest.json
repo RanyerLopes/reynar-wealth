@@ -1,0 +1,34 @@
+{
+  "name": "Reynar Wealth",
+  "short_name": "Reynar",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/crown-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/crown-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova Transação",
+      "short_name": "Adicionar",
+      "url": "/#/transactions",
+      "icons": [
+        {
+          "src": "/crown-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Reynar Wealth",
+  "description": "Você deixa de ser escravo das contas e passa a ser o Rei delas.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
