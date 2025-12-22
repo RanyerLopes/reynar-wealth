@@ -66,7 +66,24 @@ export const useTransactions = () => {
         }
     };
 
-    return { transactions, loading, error, addTransaction, removeTransaction, refetch: fetchTransactions };
+    const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
+        try {
+            if (user) {
+                const updated = await db.updateTransaction(id, updates);
+                setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updated } : t));
+                return updated;
+            } else {
+                // Fallback for non-authenticated users
+                setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+                return { id, ...updates };
+            }
+        } catch (err) {
+            console.error('Error updating transaction:', err);
+            throw err;
+        }
+    };
+
+    return { transactions, loading, error, addTransaction, removeTransaction, updateTransaction, refetch: fetchTransactions };
 };
 
 // Hook for managing bills

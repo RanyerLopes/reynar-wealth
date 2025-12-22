@@ -66,6 +66,7 @@ export interface Bill {
   isRecurrent: boolean;
   recurrenceFrequency?: 'monthly' | 'yearly';
   attachmentUrl?: string; // Foto da fatura/boleto
+  linkedTransactionId?: string; // ID da transação criada ao pagar
 }
 
 export interface Loan {
@@ -86,6 +87,24 @@ export interface Achievement {
   isUnlocked: boolean;
   progress: number; // 0 a 100
   xpReward: number;
+}
+
+export interface Budget {
+  id: string;
+  category: string;
+  monthlyLimit: number;
+  spent: number; // Calculated from transactions
+  month: string; // YYYY-MM format
+}
+
+export interface AppNotification {
+  id: string;
+  type: 'bill_due' | 'budget_warning' | 'goal_reminder' | 'achievement' | 'info';
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: Date;
+  actionUrl?: string;
 }
 
 export interface User {
@@ -111,6 +130,7 @@ export enum AppRoutes {
   BILLS = '/bills',
   GOALS = '/goals',
   LOANS = '/loans',
+  BUDGET = '/budget',
   REPORTS = '/reports',
   SETTINGS = '/settings',
   PRICING = '/pricing',

@@ -9,6 +9,7 @@ import Market from './pages/Market';
 import Bills from './pages/Bills';
 import Goals from './pages/Goals';
 import Loans from './pages/Loans';
+import Budget from './pages/Budget';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Pricing from './pages/Pricing';
@@ -184,6 +185,7 @@ const AppLayout: React.FC = () => {
                 <Route path={AppRoutes.MARKET} element={<Market />} />
                 <Route path={AppRoutes.GOALS} element={<Goals />} />
                 <Route path={AppRoutes.LOANS} element={<Loans />} />
+                <Route path={AppRoutes.BUDGET} element={<Budget />} />
                 <Route path={AppRoutes.REPORTS} element={<Reports />} />
                 <Route path={AppRoutes.SETTINGS} element={<Settings onLogout={handleLogout} />} />
                 <Route path={AppRoutes.NOTIFICATIONS} element={<Notifications />} />

@@ -12,6 +12,8 @@
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.87.1",
     "date-fns": "^4.1.0",
+    "jspdf": "^3.0.4",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.555.0",
     "pdf-parse": "^2.4.5",
     "pdfjs-dist": "^5.4.449",

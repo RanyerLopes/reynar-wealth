@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, PieChart, LogOut, List, CalendarClock, Target, Settings, HandCoins, FileText, Sparkles, ChevronRight, BarChart3 } from 'lucide-react';
+import { Home, PieChart, LogOut, List, CalendarClock, Target, Settings, HandCoins, FileText, Sparkles, ChevronRight, BarChart3, CreditCard, Wallet } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 import { ReynarLogo } from './UI';
@@ -26,6 +26,7 @@ export const Navigation: React.FC<NavProps> = ({ onLogout }) => {
     { icon: <HandCoins size={20} />, label: 'Me Devem', path: AppRoutes.LOANS },
     { icon: <PieChart size={20} />, label: 'Investir', path: AppRoutes.INVESTMENTS },
     { icon: <Target size={20} />, label: 'Metas', path: AppRoutes.GOALS },
+    { icon: <Wallet size={20} />, label: 'Orçamento', path: AppRoutes.BUDGET },
     { icon: <FileText size={20} />, label: 'Relatórios', path: AppRoutes.REPORTS },
   ];
 

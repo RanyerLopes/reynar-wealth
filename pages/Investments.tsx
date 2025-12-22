@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, triggerCoinExplosion } from '../components/UI';
 import { Investment } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { TrendingUp, TrendingDown, AlertCircle, DollarSign, Plus, RefreshCw, X, Calculator, ArrowRight, Search, Loader2, Percent, Banknote, Scale } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, DollarSign, Plus, RefreshCw, X, Calculator, ArrowRight, Search, Loader2, Percent, Banknote, Scale, ChevronLeft, ChevronRight, Flame, Snowflake } from 'lucide-react';
 import { useGamification } from '../context/GamificationContext';
 import { AIConsultant } from '../components/AIConsultant';
 import { useInvestments } from '../hooks/useDatabase';
@@ -36,6 +36,10 @@ const Investments: React.FC = () => {
     const [simYears, setSimYears] = useState('10');
     const [simRate, setSimRate] = useState('10');
     const [simResult, setSimResult] = useState<number | null>(null);
+
+    // Market carousel state
+    const [marketQuotes, setMarketQuotes] = useState<StockQuote[]>([]);
+    const [isLoadingMarket, setIsLoadingMarket] = useState(false);
 
     // Calculations
     const totalValue = investments.reduce((acc, curr) => acc + curr.currentValue, 0);
@@ -130,6 +134,25 @@ const Investments: React.FC = () => {
             handleUpdateQuotes();
         }
     }, [dbInvestments]); // Refetch when db investments change
+
+    // Fetch popular stocks for the carousel
+    const fetchMarketQuotes = async () => {
+        setIsLoadingMarket(true);
+        try {
+            const symbols = POPULAR_STOCKS.map(s => s.symbol);
+            const quotes = await getMultipleQuotes(symbols);
+            setMarketQuotes(quotes.sort((a, b) => b.regularMarketChangePercent - a.regularMarketChangePercent));
+        } catch (error) {
+            console.error('Error fetching market quotes:', error);
+        } finally {
+            setIsLoadingMarket(false);
+        }
+    };
+
+    // Auto-fetch market quotes on mount
+    useEffect(() => {
+        fetchMarketQuotes();
+    }, []);
 
 
     const calculateCompoundInterest = () => {
@@ -242,6 +265,127 @@ const Investments: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Stock Market Carousel */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <TrendingUp size={20} className="text-primary" />
+                        <h3 className="font-semibold text-textMain">Mercado em Tempo Real</h3>
+                        {isLoadingMarket && <Loader2 size={16} className="text-primary animate-spin" />}
+                    </div>
+                    <button
+                        onClick={fetchMarketQuotes}
+                        className="text-xs text-textMuted hover:text-primary flex items-center gap-1 transition-colors"
+                        disabled={isLoadingMarket}
+                    >
+                        <RefreshCw size={14} className={isLoadingMarket ? 'animate-spin' : ''} />
+                        Atualizar
+                    </button>
+                </div>
+
+                {/* Gainers Section */}
+                {marketQuotes.filter(q => q.regularMarketChangePercent > 0).length > 0 && (
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <Flame size={14} className="text-secondary" />
+                            <span className="text-xs font-semibold text-secondary uppercase">Em Alta</span>
+                        </div>
+                        <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar snap-x snap-mandatory">
+                            {marketQuotes
+                                .filter(q => q.regularMarketChangePercent > 0)
+                                .map((quote) => (
+                                    <div
+                                        key={quote.symbol}
+                                        onClick={() => {
+                                            setAssetName(quote.symbol);
+                                            setAssetType('Ações');
+                                            setIsAddModalOpen(true);
+                                        }}
+                                        className="flex-shrink-0 w-[160px] md:w-[180px] snap-start bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 rounded-xl p-4 cursor-pointer hover:scale-105 hover:border-secondary/50 transition-all group"
+                                    >
+                                        <div className="flex items-center gap-2 mb-3">
+                                            {quote.logourl ? (
+                                                <img src={quote.logourl} alt={quote.symbol} className="w-8 h-8 rounded-lg bg-white p-0.5 object-contain" />
+                                            ) : (
+                                                <div className="w-8 h-8 rounded-lg bg-secondary/20 flex items-center justify-center">
+                                                    <DollarSign size={16} className="text-secondary" />
+                                                </div>
+                                            )}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-white text-sm truncate">{quote.symbol}</p>
+                                                <p className="text-[10px] text-textMuted truncate">{quote.shortName}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-end">
+                                            <p className="text-lg font-bold text-white">{formatBRL(quote.regularMarketPrice)}</p>
+                                            <div className="flex items-center gap-1 text-secondary text-xs font-semibold bg-secondary/20 px-2 py-0.5 rounded-full">
+                                                <TrendingUp size={12} />
+                                                +{quote.regularMarketChangePercent.toFixed(2)}%
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-textMuted mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Clique para investir</p>
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Losers Section */}
+                {marketQuotes.filter(q => q.regularMarketChangePercent < 0).length > 0 && (
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <Snowflake size={14} className="text-red-400" />
+                            <span className="text-xs font-semibold text-red-400 uppercase">Em Baixa</span>
+                        </div>
+                        <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar snap-x snap-mandatory">
+                            {marketQuotes
+                                .filter(q => q.regularMarketChangePercent < 0)
+                                .map((quote) => (
+                                    <div
+                                        key={quote.symbol}
+                                        onClick={() => {
+                                            setAssetName(quote.symbol);
+                                            setAssetType('Ações');
+                                            setIsAddModalOpen(true);
+                                        }}
+                                        className="flex-shrink-0 w-[160px] md:w-[180px] snap-start bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/20 rounded-xl p-4 cursor-pointer hover:scale-105 hover:border-red-500/50 transition-all group"
+                                    >
+                                        <div className="flex items-center gap-2 mb-3">
+                                            {quote.logourl ? (
+                                                <img src={quote.logourl} alt={quote.symbol} className="w-8 h-8 rounded-lg bg-white p-0.5 object-contain" />
+                                            ) : (
+                                                <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                                    <DollarSign size={16} className="text-red-400" />
+                                                </div>
+                                            )}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-white text-sm truncate">{quote.symbol}</p>
+                                                <p className="text-[10px] text-textMuted truncate">{quote.shortName}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-end">
+                                            <p className="text-lg font-bold text-white">{formatBRL(quote.regularMarketPrice)}</p>
+                                            <div className="flex items-center gap-1 text-red-400 text-xs font-semibold bg-red-500/20 px-2 py-0.5 rounded-full">
+                                                <TrendingDown size={12} />
+                                                {quote.regularMarketChangePercent.toFixed(2)}%
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-textMuted mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Clique para investir</p>
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Empty state */}
+                {marketQuotes.length === 0 && !isLoadingMarket && (
+                    <div className="text-center py-8 text-textMuted">
+                        <TrendingUp size={32} className="mx-auto mb-2 opacity-20" />
+                        <p className="text-sm">Clique em "Atualizar" para ver cotações</p>
+                    </div>
+                )}
             </div>
 
             {/* Comparador de Rendimentos */}

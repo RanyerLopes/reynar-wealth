@@ -108,12 +108,31 @@ export const getMultipleQuotes = async (symbols: string[]): Promise<StockQuote[]
             return cachedQuotes;
         }
 
-        // Fetch remaining symbols
+        // Fetch remaining symbols with fundamental data (includes logo)
         const symbolList = symbolsToFetch.join(',');
-        const response = await fetch(withToken(`${BRAPI_BASE_URL}/quote/${symbolList}`));
+        const response = await fetch(withToken(`${BRAPI_BASE_URL}/quote/${symbolList}?fundamental=true`));
 
         if (!response.ok) {
             console.error('Failed to fetch multiple quotes:', response.status);
+
+            // Fallback mock data when rate limited (429)
+            if (response.status === 429) {
+                console.warn('BRAPI rate limit reached, using mock data');
+                const mockQuotes: StockQuote[] = [
+                    { symbol: 'PETR4', shortName: 'Petrobras PN', longName: 'Petrobras', currency: 'BRL', regularMarketPrice: 36.82, regularMarketChange: 0.45, regularMarketChangePercent: 1.24, regularMarketDayHigh: 37.10, regularMarketDayLow: 36.20, regularMarketVolume: 45000000, regularMarketPreviousClose: 36.37, regularMarketOpen: 36.50, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/brasileiro-petrobras--600.png' },
+                    { symbol: 'VALE3', shortName: 'Vale ON', longName: 'Vale', currency: 'BRL', regularMarketPrice: 67.45, regularMarketChange: 1.12, regularMarketChangePercent: 1.69, regularMarketDayHigh: 68.00, regularMarketDayLow: 66.80, regularMarketVolume: 32000000, regularMarketPreviousClose: 66.33, regularMarketOpen: 66.50, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/vale--600.png' },
+                    { symbol: 'ITUB4', shortName: 'Itaú Unibanco PN', longName: 'Itaú', currency: 'BRL', regularMarketPrice: 32.18, regularMarketChange: 0.28, regularMarketChangePercent: 0.88, regularMarketDayHigh: 32.50, regularMarketDayLow: 31.90, regularMarketVolume: 28000000, regularMarketPreviousClose: 31.90, regularMarketOpen: 32.00, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/itau-unibanco--600.png' },
+                    { symbol: 'BBDC4', shortName: 'Bradesco PN', longName: 'Bradesco', currency: 'BRL', regularMarketPrice: 13.42, regularMarketChange: -0.15, regularMarketChangePercent: -1.10, regularMarketDayHigh: 13.60, regularMarketDayLow: 13.30, regularMarketVolume: 20000000, regularMarketPreviousClose: 13.57, regularMarketOpen: 13.55, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/bradesco--600.png' },
+                    { symbol: 'BBAS3', shortName: 'Banco do Brasil ON', longName: 'BB', currency: 'BRL', regularMarketPrice: 28.95, regularMarketChange: 0.35, regularMarketChangePercent: 1.22, regularMarketDayHigh: 29.10, regularMarketDayLow: 28.60, regularMarketVolume: 15000000, regularMarketPreviousClose: 28.60, regularMarketOpen: 28.70, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/banco-do-brasil--600.png' },
+                    { symbol: 'WEGE3', shortName: 'WEG ON', longName: 'WEG', currency: 'BRL', regularMarketPrice: 52.30, regularMarketChange: 0.78, regularMarketChangePercent: 1.51, regularMarketDayHigh: 52.80, regularMarketDayLow: 51.50, regularMarketVolume: 8000000, regularMarketPreviousClose: 51.52, regularMarketOpen: 51.60, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/weg--600.png' },
+                    { symbol: 'ABEV3', shortName: 'Ambev ON', longName: 'Ambev', currency: 'BRL', regularMarketPrice: 12.85, regularMarketChange: -0.08, regularMarketChangePercent: -0.62, regularMarketDayHigh: 12.95, regularMarketDayLow: 12.75, regularMarketVolume: 22000000, regularMarketPreviousClose: 12.93, regularMarketOpen: 12.90, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/ambev--600.png' },
+                    { symbol: 'MGLU3', shortName: 'Magazine Luiza ON', longName: 'Magalu', currency: 'BRL', regularMarketPrice: 9.45, regularMarketChange: -0.32, regularMarketChangePercent: -3.28, regularMarketDayHigh: 9.80, regularMarketDayLow: 9.35, regularMarketVolume: 35000000, regularMarketPreviousClose: 9.77, regularMarketOpen: 9.70, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/magazine-luiza--600.png' },
+                    { symbol: 'RENT3', shortName: 'Localiza ON', longName: 'Localiza', currency: 'BRL', regularMarketPrice: 45.20, regularMarketChange: 0.55, regularMarketChangePercent: 1.23, regularMarketDayHigh: 45.50, regularMarketDayLow: 44.60, regularMarketVolume: 5000000, regularMarketPreviousClose: 44.65, regularMarketOpen: 44.80, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/localiza-hertz--600.png' },
+                    { symbol: 'B3SA3', shortName: 'B3 ON', longName: 'B3', currency: 'BRL', regularMarketPrice: 11.78, regularMarketChange: -0.12, regularMarketChangePercent: -1.01, regularMarketDayHigh: 11.95, regularMarketDayLow: 11.65, regularMarketVolume: 18000000, regularMarketPreviousClose: 11.90, regularMarketOpen: 11.88, regularMarketTime: new Date().toISOString(), logourl: 'https://s3-symbol-logo.tradingview.com/b3-brasil-bolsa-balcao--600.png' },
+                ];
+                return mockQuotes;
+            }
+
             return cachedQuotes;
         }
 

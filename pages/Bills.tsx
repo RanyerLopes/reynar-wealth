@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle, AlertTriangle, Calendar as CalendarIcon, Clock, RotateCw, X, List, ChevronLeft, ChevronRight, Camera, FileText, ScanLine, Loader2, Sparkles, CreditCard as CardIcon, ShoppingBag, Trash2, Cpu, ShieldCheck, CalendarClock, ArrowLeft, Wallet, PieChart } from 'lucide-react';
+import { Plus, CheckCircle, AlertTriangle, Calendar as CalendarIcon, Clock, RotateCw, X, List, ChevronLeft, ChevronRight, Camera, FileText, ScanLine, Loader2, Sparkles, CreditCard as CardIcon, ShoppingBag, Trash2, Cpu, ShieldCheck, CalendarClock, ArrowLeft, Wallet, PieChart, ExternalLink, Copy, Smartphone, Banknote } from 'lucide-react';
 import { Card, Button, Input, Badge } from '../components/UI';
 import { Bill, CreditCard, Transaction } from '../types';
 import { useGamification } from '../context/GamificationContext';
@@ -106,8 +106,41 @@ const Bills: React.FC = () => {
     const handleTogglePaid = (id: string) => {
         setBills(prev => prev.map(b => {
             if (b.id === id) {
-                if (!b.isPaid) addXp(50);
-                return { ...b, isPaid: !b.isPaid };
+                // Se está marcando como PAGA (era não paga)
+                if (!b.isPaid) {
+                    addXp(50);
+
+                    // Criar transação correspondente se ainda não existe
+                    if (!b.linkedTransactionId) {
+                        const newTransactionId = Math.random().toString();
+                        const newTransaction: Transaction = {
+                            id: newTransactionId,
+                            description: b.description,
+                            amount: b.amount,
+                            type: 'expense',
+                            category: b.category || 'Outros',
+                            date: new Date(), // Data do pagamento
+                        };
+
+                        // Atualizar lista de transações
+                        const updatedTransactions = [newTransaction, ...allTransactions];
+                        setAllTransactions(updatedTransactions);
+                        localStorage.setItem('finnova_transactions', JSON.stringify(updatedTransactions));
+
+                        return { ...b, isPaid: true, linkedTransactionId: newTransactionId };
+                    }
+
+                    return { ...b, isPaid: true };
+                } else {
+                    // Se está desmarcando (era paga, voltando a não paga)
+                    // Remover a transação correspondente se existir
+                    if (b.linkedTransactionId) {
+                        const updatedTransactions = allTransactions.filter(t => t.id !== b.linkedTransactionId);
+                        setAllTransactions(updatedTransactions);
+                        localStorage.setItem('finnova_transactions', JSON.stringify(updatedTransactions));
+                    }
+                    return { ...b, isPaid: false, linkedTransactionId: undefined };
+                }
             }
             return b;
         }));
@@ -284,13 +317,105 @@ const Bills: React.FC = () => {
         setInstallments('1');
     };
 
+    // --- BANK DEEP LINKS ---
+    const BANK_DEEP_LINKS: Record<string, { ios: string; android: string; web: string }> = {
+        'Nubank': { ios: 'nubank://', android: 'com.nu.production', web: 'https://app.nubank.com.br' },
+        'Itaú': { ios: 'itau://', android: 'com.itau', web: 'https://www.itau.com.br/app' },
+        'Bradesco': { ios: 'bradesco://', android: 'com.bradesco', web: 'https://banco.bradesco/app' },
+        'Santander': { ios: 'santander://', android: 'com.santander.app', web: 'https://www.santander.com.br/app' },
+        'BB': { ios: 'bb://', android: 'br.com.bb.android', web: 'https://www.bb.com.br/app' },
+        'Caixa': { ios: 'caixa://', android: 'br.com.gabba.Caixa', web: 'https://www.caixa.gov.br/app' },
+        'Inter': { ios: 'bancointer://', android: 'br.com.intermedium', web: 'https://www.bancointer.com.br/app' },
+        'C6': { ios: 'c6bank://', android: 'com.c6bank.app', web: 'https://www.c6bank.com.br/app' },
+        'PicPay': { ios: 'picpay://', android: 'com.picpay', web: 'https://www.picpay.com/app' },
+        'PagBank': { ios: 'pagseguro://', android: 'br.com.uol.ps.myaccount', web: 'https://pagseguro.uol.com.br/app' },
+    };
+
+    const openBankApp = (bankName: string) => {
+        const links = BANK_DEEP_LINKS[bankName];
+        if (!links) {
+            alert(`Não temos o link para o app do ${bankName}. Abra manualmente o app do seu banco.`);
+            return;
+        }
+
+        // Detect platform
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isIOS = /iphone|ipad|ipod/.test(userAgent);
+        const isAndroid = /android/.test(userAgent);
+
+        if (isIOS) {
+            window.location.href = links.ios;
+            setTimeout(() => window.open(links.web, '_blank'), 500);
+        } else if (isAndroid) {
+            window.location.href = `intent://#Intent;package=${links.android};end`;
+            setTimeout(() => window.open(links.web, '_blank'), 500);
+        } else {
+            window.open(links.web, '_blank');
+        }
+    };
+
+    const copyToClipboard = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
     // --- INVOICE VIEW COMPONENT ---
     const InvoiceView = ({ card }: { card: CreditCard }) => {
+        const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+        const [barcodeInput, setBarcodeInput] = useState('');
+        const [showBarcodeModal, setShowBarcodeModal] = useState(false);
+        const [invoicePaid, setInvoicePaid] = useState(false);
+        const [copiedBarcode, setCopiedBarcode] = useState(false);
+
         // Filter transactions for this card
         const cardTransactions = allTransactions.filter(t => t.cardId === card.id).sort((a, b) => b.date.getTime() - a.date.getTime());
         const invoiceTotal = cardTransactions.reduce((acc, t) => acc + t.amount, 0);
         const limitUsedPercent = Math.min((invoiceTotal / card.limit) * 100, 100);
         const availableLimit = Math.max(0, card.limit - invoiceTotal);
+
+        // Get stored barcode for this card
+        const storedBarcode = localStorage.getItem(`invoice_barcode_${card.id}`) || '';
+
+        const handlePayInvoice = () => {
+            // Clear all transactions for this card (simulate payment)
+            const clearedTransactions = allTransactions.filter(t => t.cardId !== card.id);
+            setAllTransactions(clearedTransactions);
+            localStorage.setItem('finnova_transactions', JSON.stringify(clearedTransactions));
+
+            // Clear barcode
+            localStorage.removeItem(`invoice_barcode_${card.id}`);
+
+            setInvoicePaid(true);
+            addXp(100);
+
+            setTimeout(() => {
+                setShowPaymentOptions(false);
+                setInvoicePaid(false);
+            }, 2000);
+        };
+
+        const handleSaveBarcode = () => {
+            if (barcodeInput.trim()) {
+                localStorage.setItem(`invoice_barcode_${card.id}`, barcodeInput.trim());
+                setShowBarcodeModal(false);
+                setBarcodeInput('');
+            }
+        };
+
+        const handleCopyBarcode = async () => {
+            const barcode = storedBarcode || barcodeInput;
+            if (barcode) {
+                const success = await copyToClipboard(barcode);
+                if (success) {
+                    setCopiedBarcode(true);
+                    setTimeout(() => setCopiedBarcode(false), 2000);
+                }
+            }
+        };
 
         return (
             <div className="animate-slide-up space-y-6">
@@ -299,6 +424,7 @@ const Bills: React.FC = () => {
                         <ArrowLeft size={20} />
                     </button>
                     <h3 className="text-xl font-bold text-white">{card.name}</h3>
+                    {invoicePaid && <Badge className="bg-secondary text-black">✓ Paga</Badge>}
                 </div>
 
                 {/* Card Summary Header */}
@@ -309,22 +435,24 @@ const Bills: React.FC = () => {
 
                     <div className="relative z-10">
                         <p className="text-white/80 text-xs font-medium uppercase tracking-wider mb-1">Fatura Atual</p>
-                        <h2 className="text-4xl font-bold text-white mb-6">R$ {invoiceTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h2>
+                        <h2 className={`text-4xl font-bold text-white mb-6 ${invoicePaid ? 'line-through opacity-50' : ''}`}>
+                            R$ {invoiceTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </h2>
 
                         <div className="space-y-2">
                             <div className="flex justify-between text-xs text-white/90">
                                 <span>Limite Utilizado</span>
-                                <span>{limitUsedPercent.toFixed(0)}%</span>
+                                <span>{invoicePaid ? '0' : limitUsedPercent.toFixed(0)}%</span>
                             </div>
                             <div className="w-full h-2 bg-black/30 rounded-full overflow-hidden">
-                                <div className="h-full bg-white transition-all duration-1000" style={{ width: `${limitUsedPercent}%` }}></div>
+                                <div className="h-full bg-white transition-all duration-1000" style={{ width: invoicePaid ? '0%' : `${limitUsedPercent}%` }}></div>
                             </div>
-                            <p className="text-xs text-white/70 text-right pt-1">Disponível: R$ {availableLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                            <p className="text-xs text-white/70 text-right pt-1">Disponível: R$ {(invoicePaid ? card.limit : availableLimit).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Actions */}
+                {/* Quick Actions */}
                 <div className="flex gap-3">
                     <Button
                         className="flex-1"
@@ -334,16 +462,128 @@ const Bills: React.FC = () => {
                         <Plus size={18} /> Lançar Compra
                     </Button>
                     <Button
-                        className="flex-1 bg-surface border border-surfaceHighlight hover:bg-surfaceHighlight"
-                        onClick={() => {
-                            // Logic to "Pay" invoice would go here (Create a payment transaction and clear cardId or mark as paid)
-                            alert('Em um app real, isso geraria uma despesa de pagamento e limparia a fatura!');
-                            addXp(100);
-                        }}
+                        className="flex-1"
+                        onClick={() => setShowPaymentOptions(!showPaymentOptions)}
+                        disabled={invoiceTotal === 0}
                     >
-                        <CheckCircle size={18} /> Pagar Fatura
+                        <Banknote size={18} /> Pagar Fatura
                     </Button>
                 </div>
+
+                {/* Payment Options Panel */}
+                {showPaymentOptions && invoiceTotal > 0 && (
+                    <div className="bg-surface border border-surfaceHighlight rounded-2xl p-4 space-y-4 animate-slide-up">
+                        <h4 className="font-bold text-white flex items-center gap-2">
+                            <Wallet size={18} className="text-primary" /> Opções de Pagamento
+                        </h4>
+
+                        {/* Open Bank App */}
+                        <button
+                            onClick={() => openBankApp(card.name)}
+                            className="w-full flex items-center gap-4 p-4 bg-surfaceHighlight hover:bg-primary/20 rounded-xl transition-all group"
+                        >
+                            <div className="p-3 bg-primary/20 rounded-xl text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                                <Smartphone size={24} />
+                            </div>
+                            <div className="text-left flex-1">
+                                <p className="font-semibold text-white">Abrir App do Banco</p>
+                                <p className="text-xs text-textMuted">Ir para o app {card.name} para pagar</p>
+                            </div>
+                            <ExternalLink size={18} className="text-textMuted group-hover:text-primary" />
+                        </button>
+
+                        {/* Barcode Section */}
+                        <div className="space-y-2">
+                            {storedBarcode ? (
+                                <div className="w-full flex items-center gap-3 p-4 bg-surfaceHighlight rounded-xl">
+                                    <div className="p-3 bg-secondary/20 rounded-xl text-secondary">
+                                        <ScanLine size={24} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs text-textMuted">Código de Barras</p>
+                                        <p className="text-sm text-white font-mono truncate">{storedBarcode}</p>
+                                    </div>
+                                    <button
+                                        onClick={handleCopyBarcode}
+                                        className={`p-2 rounded-lg transition-all ${copiedBarcode ? 'bg-secondary text-black' : 'bg-surface hover:bg-primary/20 text-textMuted hover:text-primary'}`}
+                                    >
+                                        {copiedBarcode ? <CheckCircle size={18} /> : <Copy size={18} />}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowBarcodeModal(true)}
+                                        className="p-2 bg-surface hover:bg-primary/20 rounded-lg text-textMuted hover:text-primary transition-all"
+                                    >
+                                        <FileText size={18} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setShowBarcodeModal(true)}
+                                    className="w-full flex items-center gap-4 p-4 bg-surfaceHighlight hover:bg-primary/20 rounded-xl transition-all group"
+                                >
+                                    <div className="p-3 bg-secondary/20 rounded-xl text-secondary">
+                                        <ScanLine size={24} />
+                                    </div>
+                                    <div className="text-left flex-1">
+                                        <p className="font-semibold text-white">Adicionar Código de Barras</p>
+                                        <p className="text-xs text-textMuted">Cole o código para copiar depois</p>
+                                    </div>
+                                    <Plus size={18} className="text-textMuted" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Mark as Paid */}
+                        <button
+                            onClick={handlePayInvoice}
+                            className="w-full flex items-center gap-4 p-4 bg-secondary/10 hover:bg-secondary/20 border border-secondary/30 rounded-xl transition-all group"
+                        >
+                            <div className="p-3 bg-secondary/20 rounded-xl text-secondary group-hover:bg-secondary group-hover:text-black transition-colors">
+                                <CheckCircle size={24} />
+                            </div>
+                            <div className="text-left flex-1">
+                                <p className="font-semibold text-white">Marcar como Paga</p>
+                                <p className="text-xs text-textMuted">Limpar fatura e ganhar +100 XP</p>
+                            </div>
+                        </button>
+                    </div>
+                )}
+
+                {/* Barcode Input Modal */}
+                {showBarcodeModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                        <div className="bg-surface w-full max-w-md rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
+                            <div className="p-6 border-b border-surfaceHighlight flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white">Código de Barras</h3>
+                                    <p className="text-xs text-textMuted">Cole o código da fatura</p>
+                                </div>
+                                <button onClick={() => setShowBarcodeModal(false)} className="text-textMuted hover:text-white p-2 hover:bg-surfaceHighlight rounded-lg transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="text-xs font-medium text-textMuted uppercase tracking-wider ml-1 mb-2 block">Código de Barras / Linha Digitável</label>
+                                    <textarea
+                                        value={barcodeInput}
+                                        onChange={(e) => setBarcodeInput(e.target.value)}
+                                        placeholder="Cole aqui o código de barras ou linha digitável da sua fatura..."
+                                        className="w-full bg-surfaceHighlight border border-surfaceHighlight rounded-xl p-4 text-white font-mono text-sm resize-none h-24 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                    />
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button variant="secondary" className="flex-1" onClick={() => setShowBarcodeModal(false)}>
+                                        Cancelar
+                                    </Button>
+                                    <Button className="flex-1" onClick={handleSaveBarcode} disabled={!barcodeInput.trim()}>
+                                        <CheckCircle size={18} /> Salvar
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Transactions List */}
                 <div className="bg-surface border border-surfaceHighlight rounded-xl overflow-hidden">
@@ -718,6 +958,38 @@ const Bills: React.FC = () => {
                                 </button>
                             </div>
 
+                            {/* Import Card Statement Banner */}
+                            <div className="bg-gradient-to-r from-indigo-900/30 to-primary/10 border border-primary/20 rounded-xl p-4 flex items-center justify-between relative overflow-hidden group shadow-lg max-w-lg mx-auto">
+                                <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <FileText size={60} />
+                                </div>
+                                <div className="relative z-10 flex-1 pr-4">
+                                    <h4 className="font-bold text-white flex items-center gap-2 mb-1">
+                                        <FileText size={18} className="text-primary" /> Importar Extrato
+                                    </h4>
+                                    <p className="text-xs text-textMuted leading-relaxed">
+                                        Envie o extrato do cartão (PDF) para importar suas compras automaticamente.
+                                    </p>
+                                </div>
+                                <label className="shrink-0 z-10 cursor-pointer">
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.csv,.ofx,.xlsx"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                // Navigate to transactions page for import processing
+                                                window.location.href = '/#/transactions';
+                                            }
+                                        }}
+                                    />
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/80 text-white rounded-xl font-medium text-sm transition-colors shadow-md shadow-primary/30">
+                                        <Plus size={16} /> Enviar Arquivo
+                                    </div>
+                                </label>
+                            </div>
+
                             <div className="flex items-center gap-2 p-4 bg-surfaceHighlight/30 rounded-xl text-xs text-textMuted max-w-lg mx-auto text-center border border-surfaceHighlight">
                                 <ShieldCheck size={16} className="text-primary shrink-0" />
                                 <p>Toque em um cartão para ver o histórico detalhado de compras.</p>
@@ -826,35 +1098,37 @@ const Bills: React.FC = () => {
                 </div>
             )}
 
-            {/* ADD CARD MODAL */}
+            {/* ADD CARD MODAL - Improved UI/UX */}
             {isAddCardModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4 animate-fade-in">
-                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up h-[90vh] md:h-auto flex flex-col">
-                        <div className="p-6 border-b border-surfaceHighlight flex justify-between items-center sticky top-0 bg-surface z-10 shrink-0">
+                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up max-h-[85vh] md:max-h-[90vh] flex flex-col">
+                        {/* Header */}
+                        <div className="p-4 md:p-6 border-b border-surfaceHighlight flex justify-between items-center shrink-0">
                             <div>
                                 <h3 className="text-lg font-bold text-white">Novo Cartão</h3>
                                 <p className="text-xs text-textMuted">Escolha um banco ou personalize</p>
                             </div>
-                            <button onClick={() => setIsAddCardModalOpen(false)} className="text-textMuted hover:text-white"><X size={20} /></button>
+                            <button onClick={() => setIsAddCardModalOpen(false)} className="text-textMuted hover:text-white p-2 hover:bg-surfaceHighlight rounded-lg transition-colors"><X size={20} /></button>
                         </div>
 
-                        <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                        {/* Scrollable Content Area */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6">
                             <p className="text-xs font-semibold text-textMuted uppercase mb-3">Bancos Populares</p>
-                            <div className="grid grid-cols-4 gap-3 mb-6">
+                            <div className="grid grid-cols-5 gap-2 mb-6">
                                 {BANK_PRESETS.map((bank) => (
                                     <button
                                         key={bank.name}
                                         type="button"
                                         onClick={() => selectBankPreset(bank)}
-                                        className={`flex flex-col items-center gap-2 p-2 rounded-xl border transition-all ${newCardName === bank.name ? 'bg-primary/20 border-primary' : 'bg-surfaceHighlight border-transparent hover:border-textMuted'}`}
+                                        className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${newCardName === bank.name ? 'bg-primary/20 border-primary scale-105' : 'bg-surfaceHighlight border-transparent hover:border-textMuted hover:scale-105'}`}
                                     >
-                                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${bank.gradient} shadow-sm`}></div>
-                                        <span className="text-[10px] text-textMain truncate w-full text-center">{bank.name}</span>
+                                        <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${bank.gradient} shadow-sm`}></div>
+                                        <span className="text-[9px] md:text-[10px] text-textMain truncate w-full text-center leading-tight">{bank.name}</span>
                                     </button>
                                 ))}
                             </div>
 
-                            <form onSubmit={handleCreateCard} className="space-y-4 pt-4 border-t border-surfaceHighlight">
+                            <form id="add-card-form" onSubmit={handleCreateCard} className="space-y-4 pt-4 border-t border-surfaceHighlight">
                                 <Input
                                     label="Nome do Cartão (Apelido)"
                                     placeholder="Ex: Nubank Principal"
@@ -871,46 +1145,53 @@ const Bills: React.FC = () => {
                                     onChange={(e) => setNewCardLimit(e.target.value)}
                                 />
 
+                                {/* Color Selection */}
                                 <div>
                                     <label className="text-xs font-medium text-textMuted uppercase tracking-wider ml-1 mb-2 block">Cor do Cartão</label>
-                                    <div className="grid grid-cols-5 gap-2">
+                                    <div className="grid grid-cols-8 gap-2">
                                         {['from-zinc-800 to-black', 'from-purple-800 to-purple-600', 'from-red-700 to-red-500', 'from-orange-600 to-orange-400', 'from-blue-800 to-blue-600', 'from-green-700 to-emerald-600', 'from-pink-700 to-rose-500', 'from-yellow-600 to-amber-500'].map((grad, i) => (
                                             <button
                                                 key={i}
                                                 type="button"
                                                 onClick={() => setNewCardGradient(grad)}
-                                                className={`w-full aspect-square rounded-full bg-gradient-to-br ${grad} border-2 ${newCardGradient === grad ? 'border-white scale-110' : 'border-transparent hover:scale-105'} transition-all`}
+                                                className={`w-full aspect-square rounded-full bg-gradient-to-br ${grad} border-2 ${newCardGradient === grad ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'} transition-all`}
                                             />
                                         ))}
                                     </div>
                                 </div>
 
+                                {/* Brand Selection - Larger for visibility */}
                                 <div>
-                                    <label className="text-xs font-medium text-textMuted uppercase tracking-wider ml-1 mb-2 block">Bandeira</label>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <label className="text-xs font-medium text-textMuted uppercase tracking-wider ml-1 mb-2 block">Bandeira do Cartão</label>
+                                    <div className="grid grid-cols-2 gap-3">
                                         <button
                                             type="button"
                                             onClick={() => setNewCardBrand('mastercard')}
-                                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${newCardBrand === 'mastercard' ? 'bg-primary/20 border-primary text-white' : 'bg-surfaceHighlight border-transparent text-textMuted'}`}
+                                            className={`p-4 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${newCardBrand === 'mastercard' ? 'bg-primary/20 border-primary text-white shadow-lg shadow-primary/20' : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-textMuted'}`}
                                         >
                                             <div className="flex -space-x-2">
-                                                <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                                                <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+                                                <div className="w-6 h-6 rounded-full bg-red-500"></div>
+                                                <div className="w-6 h-6 rounded-full bg-yellow-500"></div>
                                             </div>
-                                            Mastercard
+                                            <span className="font-semibold">Mastercard</span>
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setNewCardBrand('visa')}
-                                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${newCardBrand === 'visa' ? 'bg-primary/20 border-primary text-white' : 'bg-surfaceHighlight border-transparent text-textMuted'}`}
+                                            className={`p-4 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${newCardBrand === 'visa' ? 'bg-primary/20 border-primary text-white shadow-lg shadow-primary/20' : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-textMuted'}`}
                                         >
-                                            <span className="font-bold italic">VISA</span>
+                                            <span className="font-bold italic text-lg">VISA</span>
                                         </button>
                                     </div>
                                 </div>
-
-                                <Button type="submit" className="mt-6">Adicionar à Carteira</Button>
                             </form>
+                        </div>
+
+                        {/* Sticky Footer with Submit Button */}
+                        <div className="p-4 md:p-6 border-t border-surfaceHighlight bg-surface shrink-0">
+                            <Button type="submit" form="add-card-form" className="w-full">
+                                <Plus size={18} /> Adicionar à Carteira
+                            </Button>
                         </div>
                     </div>
                 </div>

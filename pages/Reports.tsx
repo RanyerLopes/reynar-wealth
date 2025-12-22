@@ -1,17 +1,21 @@
 
 import React, { useState } from 'react';
-import { FileText, Download, Share2, ShieldCheck, HeartPulse, GraduationCap, Building, Crown, Image, Calendar, Search, X, ZoomIn, FileCheck, CheckCircle } from 'lucide-react';
+import { FileText, Download, Share2, ShieldCheck, HeartPulse, GraduationCap, Building, Crown, Image, Calendar, Search, X, ZoomIn, FileCheck, CheckCircle, FileSpreadsheet, Database } from 'lucide-react';
 import { Card, Button, Input, triggerCoinExplosion } from '../components/UI';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
-import { useTransactions, useInvestments, useBills } from '../hooks/useDatabase';
+import { useTransactions, useInvestments, useBills, useGoals } from '../hooks/useDatabase';
+import * as exportService from '../services/exportService';
 
 const Reports: React.FC = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'tax' | 'archive'>('tax');
-    const [selectedYear, setSelectedYear] = useState('2023');
+    const [activeTab, setActiveTab] = useState<'tax' | 'archive' | 'export'>('tax');
+    const [selectedYear, setSelectedYear] = useState('2024');
     const [isExporting, setIsExporting] = useState(false);
+    const [isExportingPDF, setIsExportingPDF] = useState(false);
+    const [isExportingExcel, setIsExportingExcel] = useState(false);
+    const [isExportingBackup, setIsExportingBackup] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
 
@@ -22,9 +26,10 @@ const Reports: React.FC = () => {
     const { transactions } = useTransactions();
     const { investments } = useInvestments();
     const { bills } = useBills();
+    const { goals } = useGoals();
 
     // Check User Plan
-    const currentPlan = localStorage.getItem('finnova_plan') || 'basic';
+    const currentPlan = localStorage.getItem('reynar_plan') || 'basic';
     const isLocked = currentPlan === 'basic';
 
     // --- LOGIC FOR TAX REPORT ---
@@ -65,18 +70,62 @@ const Reports: React.FC = () => {
         doc.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Export Handlers
+    const handleExportPDF = async () => {
+        setIsExportingPDF(true);
+        try {
+            await exportService.exportToPDF(transactions, 'Relatório de Transações');
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (err) {
+            console.error('Error exporting PDF:', err);
+            alert('Erro ao gerar PDF. Tente novamente.');
+        } finally {
+            setIsExportingPDF(false);
+        }
+    };
+
+    const handleExportExcel = () => {
+        setIsExportingExcel(true);
+        try {
+            exportService.exportToExcel(transactions);
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (err) {
+            console.error('Error exporting Excel:', err);
+            alert('Erro ao gerar Excel. Tente novamente.');
+        } finally {
+            setIsExportingExcel(false);
+        }
+    };
+
+    const handleExportBackup = () => {
+        setIsExportingBackup(true);
+        try {
+            const budgets = JSON.parse(localStorage.getItem('reynar_budgets') || '[]');
+            exportService.exportBackup({
+                transactions,
+                bills,
+                investments,
+                goals,
+                budgets,
+            });
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (err) {
+            console.error('Error exporting backup:', err);
+            alert('Erro ao gerar backup. Tente novamente.');
+        } finally {
+            setIsExportingBackup(false);
+        }
+    };
+
     const handleExport = () => {
         setIsExporting(true);
         setTimeout(() => {
             setIsExporting(false);
-            const link = document.createElement("a");
-            link.setAttribute("href", "#");
-            link.setAttribute("download", `reynar-extrato-${selectedYear}.csv`);
-            document.body.appendChild(link);
-            // link.click(); // Commented out to prevent actual download in demo
-            document.body.removeChild(link);
-            alert(`Arquivo 'reynar-extrato-${selectedYear}.csv' gerado com sucesso!`);
-        }, 1500);
+            handleExportExcel();
+        }, 500);
     };
 
     const handleEmail = () => {

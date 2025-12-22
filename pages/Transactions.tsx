@@ -66,8 +66,14 @@ const Transactions: React.FC = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // Use database hook for transactions
-    const { transactions, loading: transactionsLoading, addTransaction, removeTransaction } = useTransactions();
+    const { transactions, loading: transactionsLoading, addTransaction, removeTransaction, updateTransaction } = useTransactions();
     const [localTransactions, setLocalTransactions] = useState<Transaction[]>([]);
+
+    // Edit mode state
+    const [isEditing, setIsEditing] = useState(false);
+    const [editDesc, setEditDesc] = useState('');
+    const [editCategory, setEditCategory] = useState('');
+    const [editAmount, setEditAmount] = useState('');
 
     // Sync database transactions with local state
     useEffect(() => {
@@ -844,56 +850,144 @@ const Transactions: React.FC = () => {
                 </div>
             )}
 
-            {/* Transaction Details Modal */}
+            {/* Transaction Details Modal with Edit Mode */}
             {selectedTransaction && !isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
                     <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
                         <div className="p-4 border-b border-surfaceHighlight flex justify-between items-center">
-                            <h3 className="font-bold text-white">Detalhes</h3>
-                            <button onClick={() => setSelectedTransaction(null)} className="text-textMuted hover:text-white"><X size={20} /></button>
+                            <h3 className="font-bold text-white">{isEditing ? 'Editar Transação' : 'Detalhes'}</h3>
+                            <button onClick={() => { setSelectedTransaction(null); setIsEditing(false); }} className="text-textMuted hover:text-white"><X size={20} /></button>
                         </div>
                         <div className="p-6">
-                            <div className="text-center mb-6">
-                                <p className="text-textMuted text-sm mb-1">{selectedTransaction.category}</p>
-                                <h2 className={`text-3xl font-bold ${selectedTransaction.type === 'income' ? 'text-secondary' : 'text-textMain'}`}>
-                                    R$ {selectedTransaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </h2>
-                                <p className="text-white mt-1 font-medium">{selectedTransaction.description}</p>
-                                <p className="text-textMuted text-xs">{format(selectedTransaction.date, 'dd/MM/yyyy HH:mm')}</p>
-                            </div>
-
-                            {selectedTransaction.receiptUrl ? (
-                                <div className="mb-6">
-                                    <p className="text-xs font-medium text-textMuted uppercase mb-2">Comprovante</p>
-                                    <div className="w-full h-48 rounded-xl overflow-hidden border border-surfaceHighlight relative group">
-                                        <img src={selectedTransaction.receiptUrl} alt="Comprovante" className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <button onClick={() => { setCameraContext('details'); setShowCamera(true); }} className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full font-bold text-xs">
-                                                <Camera size={14} /> Alterar
-                                            </button>
+                            {isEditing ? (
+                                // Edit Mode
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-medium text-textMuted uppercase tracking-wider ml-1 mb-2 block">Descrição</label>
+                                        <input
+                                            type="text"
+                                            value={editDesc}
+                                            onChange={(e) => setEditDesc(e.target.value)}
+                                            className="w-full bg-surfaceHighlight border border-surfaceHighlight rounded-xl py-3 px-4 text-textMain placeholder-zinc-600 focus:outline-none focus:border-primary transition-all"
+                                            placeholder="Ex: Mercado, Almoço, Cinema..."
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-medium text-textMuted uppercase tracking-wider ml-1 mb-2 block">Categoria</label>
+                                            <input
+                                                type="text"
+                                                value={editCategory}
+                                                onChange={(e) => setEditCategory(e.target.value)}
+                                                className="w-full bg-surfaceHighlight border border-surfaceHighlight rounded-xl py-3 px-4 text-textMain placeholder-zinc-600 focus:outline-none focus:border-primary transition-all"
+                                                placeholder="Ex: Alimentação"
+                                            />
                                         </div>
+                                        <div>
+                                            <label className="text-xs font-medium text-textMuted uppercase tracking-wider ml-1 mb-2 block">Valor</label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={editAmount}
+                                                onChange={(e) => setEditAmount(e.target.value)}
+                                                className="w-full bg-surfaceHighlight border border-surfaceHighlight rounded-xl py-3 px-4 text-textMain placeholder-zinc-600 focus:outline-none focus:border-primary transition-all"
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4">
+                                        <Button
+                                            variant="secondary"
+                                            className="flex-1"
+                                            onClick={() => setIsEditing(false)}
+                                        >
+                                            Cancelar
+                                        </Button>
+                                        <Button
+                                            className="flex-1"
+                                            onClick={async () => {
+                                                if (selectedTransaction) {
+                                                    try {
+                                                        await updateTransaction(selectedTransaction.id, {
+                                                            description: editDesc,
+                                                            category: editCategory,
+                                                            amount: parseFloat(editAmount) || selectedTransaction.amount,
+                                                        });
+                                                        setSelectedTransaction({
+                                                            ...selectedTransaction,
+                                                            description: editDesc,
+                                                            category: editCategory,
+                                                            amount: parseFloat(editAmount) || selectedTransaction.amount,
+                                                        });
+                                                        setIsEditing(false);
+                                                        addXp(10);
+                                                    } catch (error) {
+                                                        console.error('Error updating transaction:', error);
+                                                        alert('Erro ao salvar. Tente novamente.');
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            Salvar Alterações
+                                        </Button>
                                     </div>
                                 </div>
                             ) : (
-                                <button
-                                    onClick={() => { setCameraContext('details'); setShowCamera(true); }}
-                                    className="w-full py-4 border-2 border-dashed border-surfaceHighlight rounded-xl flex items-center justify-center gap-2 text-textMuted hover:text-white hover:border-primary transition-all mb-6"
-                                >
-                                    <Camera size={20} /> Anexar Comprovante
-                                </button>
-                            )}
+                                // View Mode
+                                <>
+                                    <div className="text-center mb-6">
+                                        <p className="text-textMuted text-sm mb-1">{selectedTransaction.category}</p>
+                                        <h2 className={`text-3xl font-bold ${selectedTransaction.type === 'income' ? 'text-secondary' : 'text-textMain'}`}>
+                                            R$ {selectedTransaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        </h2>
+                                        <p className="text-white mt-1 font-medium">{selectedTransaction.description}</p>
+                                        <p className="text-textMuted text-xs">{format(selectedTransaction.date, 'dd/MM/yyyy HH:mm')}</p>
+                                    </div>
 
-                            <div className="flex gap-3">
-                                <Button variant="secondary" className="flex-1">
-                                    <Share2 size={18} /> Compartilhar
-                                </Button>
-                                <button
-                                    onClick={handleDeleteTransaction}
-                                    className="p-3 bg-danger/10 text-danger rounded-xl hover:bg-danger hover:text-white transition-colors border border-danger/20"
-                                >
-                                    <Trash2 size={20} />
-                                </button>
-                            </div>
+                                    {selectedTransaction.receiptUrl ? (
+                                        <div className="mb-6">
+                                            <p className="text-xs font-medium text-textMuted uppercase mb-2">Comprovante</p>
+                                            <div className="w-full h-48 rounded-xl overflow-hidden border border-surfaceHighlight relative group">
+                                                <img src={selectedTransaction.receiptUrl} alt="Comprovante" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <button onClick={() => { setCameraContext('details'); setShowCamera(true); }} className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full font-bold text-xs">
+                                                        <Camera size={14} /> Alterar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => { setCameraContext('details'); setShowCamera(true); }}
+                                            className="w-full py-4 border-2 border-dashed border-surfaceHighlight rounded-xl flex items-center justify-center gap-2 text-textMuted hover:text-white hover:border-primary transition-all mb-6"
+                                        >
+                                            <Camera size={20} /> Anexar Comprovante
+                                        </button>
+                                    )}
+
+                                    <div className="flex gap-3">
+                                        <Button
+                                            variant="secondary"
+                                            className="flex-1"
+                                            onClick={() => {
+                                                setEditDesc(selectedTransaction.description);
+                                                setEditCategory(selectedTransaction.category);
+                                                setEditAmount(selectedTransaction.amount.toString());
+                                                setIsEditing(true);
+                                            }}
+                                        >
+                                            <Edit2 size={18} /> Editar
+                                        </Button>
+                                        <button
+                                            onClick={handleDeleteTransaction}
+                                            className="p-3 bg-danger/10 text-danger rounded-xl hover:bg-danger hover:text-white transition-colors border border-danger/20"
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

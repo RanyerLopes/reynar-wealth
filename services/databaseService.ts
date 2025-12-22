@@ -33,6 +33,25 @@ export const deleteTransaction = async (id: string) => {
     if (error) throw error;
 };
 
+export const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
+    const dbUpdates: any = {};
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.amount !== undefined) dbUpdates.amount = updates.amount;
+    if (updates.category !== undefined) dbUpdates.category = updates.category;
+    if (updates.type !== undefined) dbUpdates.type = updates.type;
+    if (updates.date !== undefined) dbUpdates.date = updates.date;
+
+    const { data, error } = await supabase
+        .from('transactions')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return { ...data, date: new Date(data.date) };
+};
+
 // ==================== BILLS ====================
 export const getBills = async (userId: string): Promise<Bill[]> => {
     const { data, error } = await supabase
