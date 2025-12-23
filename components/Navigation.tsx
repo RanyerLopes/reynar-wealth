@@ -15,25 +15,35 @@ export const Navigation: React.FC<NavProps> = ({ onLogout }) => {
   // We don't need to check plan here anymore for banners, 
   // as the App.tsx Paywall ensures only paid users see this.
 
-  const isActive = (path: string) => location.pathname === path;
+  // HashRouter uses location.pathname correctly, but we need to handle the root path "/" specially
+  // Since AppRoutes.DASHBOARD is "/", we check if pathname matches exactly
+  const isActive = (path: string) => {
+    const currentPath = location.pathname;
+    // Handle root path - Dashboard
+    if (path === '/' || path === '') {
+      return currentPath === '/' || currentPath === '';
+    }
+    // For other paths, check if it starts with the path (for nested routes)
+    return currentPath === path || currentPath.startsWith(path + '/');
+  };
 
   const handleNav = (path: string) => navigate(path);
 
   const navItems = [
     { icon: <Home size={20} />, label: 'Início', path: AppRoutes.DASHBOARD },
     { icon: <List size={20} />, label: 'Extrato', path: AppRoutes.TRANSACTIONS },
-    { icon: <CalendarClock size={20} />, label: 'Contas', path: AppRoutes.BILLS },
-    { icon: <HandCoins size={20} />, label: 'Me Devem', path: AppRoutes.LOANS },
-    { icon: <PieChart size={20} />, label: 'Investir', path: AppRoutes.INVESTMENTS },
-    { icon: <Target size={20} />, label: 'Metas', path: AppRoutes.GOALS },
     { icon: <Wallet size={20} />, label: 'Orçamento', path: AppRoutes.BUDGET },
+    { icon: <CalendarClock size={20} />, label: 'Contas', path: AppRoutes.BILLS },
+    { icon: <Target size={20} />, label: 'Metas', path: AppRoutes.GOALS },
+    { icon: <PieChart size={20} />, label: 'Investir', path: AppRoutes.INVESTMENTS },
+    { icon: <HandCoins size={20} />, label: 'Me Devem', path: AppRoutes.LOANS },
     { icon: <FileText size={20} />, label: 'Relatórios', path: AppRoutes.REPORTS },
   ];
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 bg-surface border-r border-surfaceHighlight p-6 z-50">
+      <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 bg-surface border-r border-surfaceHighlight p-6 z-40">
         <button
           onClick={() => handleNav(AppRoutes.DASHBOARD)}
           className="flex items-center gap-3 mb-10 cursor-pointer hover:opacity-80 transition-opacity group w-full text-left"
@@ -50,9 +60,9 @@ export const Navigation: React.FC<NavProps> = ({ onLogout }) => {
             <button
               key={item.label}
               onClick={() => handleNav(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive(item.path)
-                ? 'bg-primary/10 text-primary border border-primary/10'
-                : 'text-textMuted hover:bg-surfaceHighlight hover:text-textMain'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 border ${isActive(item.path)
+                ? 'bg-primary/10 text-primary border-primary/30'
+                : 'text-textMuted border-transparent hover:bg-surfaceHighlight hover:text-textMain'
                 }`}
             >
               {item.icon}
@@ -84,7 +94,7 @@ export const Navigation: React.FC<NavProps> = ({ onLogout }) => {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-xl border-t border-surfaceHighlight z-50 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-xl border-t border-surfaceHighlight z-40 safe-area-bottom">
         <div className="relative">
           {/* Scrollable Container */}
           <div className="flex items-center gap-5 overflow-x-auto no-scrollbar px-4 py-3 pr-12">

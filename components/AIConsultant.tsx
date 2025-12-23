@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { RefreshCcw, Sparkles, Loader2 } from 'lucide-react';
 import { getFinancialAdvice, FinancialContext } from '../services/geminiService';
-import { mockTransactions, mockBills, mockInvestments, mockGoals } from '../services/mockData';
 
 interface AIConsultantProps {
   context?: 'general' | 'transactions' | 'bills' | 'investments' | 'goals';
@@ -48,24 +47,24 @@ export const AIConsultant: React.FC<AIConsultantProps> = ({ context = 'general',
 
   // Build financial context from available data
   const buildFinancialContext = useCallback((): FinancialContext => {
-    // Try to get data from localStorage first, fallback to mock
+    // Get data from localStorage only (no mock data fallback)
     const storedTransactions = localStorage.getItem('finnova_transactions');
     const transactions = storedTransactions
       ? JSON.parse(storedTransactions).map((t: any) => ({ ...t, date: new Date(t.date) }))
-      : mockTransactions;
+      : [];
 
     const storedBills = localStorage.getItem('finnova_bills');
     const bills = storedBills
       ? JSON.parse(storedBills).map((b: any) => ({ ...b, dueDate: new Date(b.dueDate) }))
-      : mockBills;
+      : [];
 
     const storedInvestments = localStorage.getItem('finnova_investments');
-    const investments = storedInvestments ? JSON.parse(storedInvestments) : mockInvestments;
+    const investments = storedInvestments ? JSON.parse(storedInvestments) : [];
 
     const storedGoals = localStorage.getItem('finnova_goals');
     const goals = storedGoals
       ? JSON.parse(storedGoals).map((g: any) => ({ ...g, deadline: new Date(g.deadline) }))
-      : mockGoals;
+      : [];
 
     const income = transactions
       .filter((t: any) => t.type === 'income')

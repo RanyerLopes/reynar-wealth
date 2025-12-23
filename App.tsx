@@ -23,6 +23,7 @@ import { AppRoutes } from './types';
 import { GamificationProvider, useGamification } from './context/GamificationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { Star, Trophy, Loader2, Crown } from 'lucide-react';
 
 // Global Gamification Toast Component
@@ -214,15 +215,17 @@ const AppLayout: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <SubscriptionProvider>
-          <GamificationProvider>
-            <HashRouter>
-              <AppLayout />
-            </HashRouter>
-          </GamificationProvider>
-        </SubscriptionProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <GamificationProvider>
+              <HashRouter>
+                <AppLayout />
+              </HashRouter>
+            </GamificationProvider>
+          </SubscriptionProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </ErrorBoundary>
   );
 };

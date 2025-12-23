@@ -1,16 +1,18 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, AreaChart, Area } from 'recharts';
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Calendar, AlertTriangle, ChevronRight, Eye, EyeOff, Trophy, Target, AlertCircle, X, Zap, Star, Lock, BarChart3, Activity } from 'lucide-react';
 import { Card, Badge, triggerCoinExplosion } from '../components/UI';
-import { mockChartData, mockTransactions, mockBills, mockUser, NOBILITY_TITLES } from '../services/mockData';
+import { NOBILITY_TITLES } from '../services/mockData';
 import { useGamification } from '../context/GamificationContext';
-import { format, isPast, isToday, addDays } from 'date-fns';
+import { format, isPast, isToday, addDays, startOfMonth, endOfMonth, subMonths, getMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 import { AIConsultant } from '../components/AIConsultant';
 import { Onboarding, useOnboarding } from '../components/Onboarding';
+import { useAuth } from '../context/AuthContext';
+import { useTransactions, useBills, useInvestments } from '../hooks/useDatabase';
 
 // Brighter, Neon Pastel Colors for High Contrast & Modern Look
 const COLORS = ['#c084fc', '#34d399', '#facc15', '#f87171', '#60a5fa'];
@@ -18,7 +20,14 @@ const COLORS = ['#c084fc', '#34d399', '#facc15', '#f87171', '#60a5fa'];
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     // Get Real Gamification Data
-    const { user, achievements } = useGamification();
+    const { user: gamificationUser, achievements } = useGamification();
+    // User from Auth
+    const { user: authUser } = useAuth();
+    // Database hooks
+    const { transactions } = useTransactions();
+    const { bills } = useBills();
+    const { investments } = useInvestments();
+
     // Onboarding for new users
     const { showOnboarding, completeOnboarding } = useOnboarding();
 
@@ -31,35 +40,98 @@ const Dashboard: React.FC = () => {
     // Privacy State
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
 
-    // User Data State (Synced with LocalStorage)
-    const storedName = localStorage.getItem('finnova_user_name');
-    const storedSalary = localStorage.getItem('finnova_user_salary');
+    // User Data State - prefer auth user, then localStorage, then default
+    const getUserName = () => {
+        // From Supabase auth (Google login provides full_name)
+        if (authUser?.user_metadata?.full_name) {
+            return authUser.user_metadata.full_name;
+        }
+        // From Supabase auth (email as fallback)
+        if (authUser?.email) {
+            return authUser.email.split('@')[0];
+        }
+        // From localStorage
+        const storedName = localStorage.getItem('finnova_user_name');
+        if (storedName) return storedName;
+        // Default
+        return 'Usuário';
+    };
 
-    const userName = storedName || mockUser.name;
-    const userSalary = storedSalary || mockUser.monthlySalary?.toString() || '0';
+    const userName = getUserName();
+    const storedSalary = localStorage.getItem('finnova_user_salary');
+    const userSalary = storedSalary || '0';
 
     // Retrieve Spending Limit from Settings
     const spendingLimitPercent = parseInt(localStorage.getItem('finnova_spending_limit') || '70');
 
-    // Budget Logic
-    const totalIncome = mockTransactions.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-    const totalExpenses = mockTransactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+    // Budget Logic - use real transactions
+    const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+    const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
     const remainingBalance = totalIncome - totalExpenses;
+
+    // Total patrimony from investments
+    const totalPatrimony = investments.reduce((acc, curr) => acc + curr.currentValue, 0);
 
     // Budget Calculations
     const baseIncome = userSalary ? parseFloat(userSalary) : totalIncome;
     const maxAllowedExpense = baseIncome * (spendingLimitPercent / 100);
 
     const currentExpensePercent = maxAllowedExpense > 0 ? (totalExpenses / maxAllowedExpense) * 100 : 0;
-    const isOverBudget = totalExpenses > maxAllowedExpense;
+    const isOverBudget = totalExpenses > maxAllowedExpense && maxAllowedExpense > 0;
 
-    // Bills Logic for Dashboard Alert
-    const urgentBills = mockBills.filter(b => !b.isPaid && (isPast(b.dueDate) || isToday(b.dueDate) || b.dueDate <= addDays(new Date(), 3)));
+    // Bills Logic for Dashboard Alert - use real bills
+    const urgentBills = bills.filter(b => !b.isPaid && (isPast(b.dueDate) || isToday(b.dueDate) || b.dueDate <= addDays(new Date(), 3)));
+
+    // Generate chart data from real transactions (last 6 months)
+    const chartData = useMemo(() => {
+        const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const data: { name: string; income: number; expense: number }[] = [];
+
+        for (let i = 5; i >= 0; i--) {
+            const date = subMonths(new Date(), i);
+            const monthStart = startOfMonth(date);
+            const monthEnd = endOfMonth(date);
+
+            const monthIncome = transactions
+                .filter(t => t.type === 'income' && new Date(t.date) >= monthStart && new Date(t.date) <= monthEnd)
+                .reduce((acc, t) => acc + t.amount, 0);
+
+            const monthExpense = transactions
+                .filter(t => t.type === 'expense' && new Date(t.date) >= monthStart && new Date(t.date) <= monthEnd)
+                .reduce((acc, t) => acc + t.amount, 0);
+
+            data.push({
+                name: months[getMonth(date)],
+                income: monthIncome,
+                expense: monthExpense
+            });
+        }
+
+        return data;
+    }, [transactions]);
+
+    // Expense breakdown by category
+    const expenseByCategory = useMemo(() => {
+        const categories: { [key: string]: number } = {};
+        transactions
+            .filter(t => t.type === 'expense')
+            .forEach(t => {
+                const cat = t.category || 'Outros';
+                categories[cat] = (categories[cat] || 0) + t.amount;
+            });
+
+        return Object.entries(categories)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 5);
+    }, [transactions]);
+
+    const totalExpensesByCategory = expenseByCategory.reduce((acc, c) => acc + c.value, 0);
 
     // Level Logic from Context
-    const currentLevel = user.level || 1;
-    const currentXp = user.currentXp || 0;
-    const nextLevelXp = user.nextLevelXp || 1000;
+    const currentLevel = gamificationUser.level || 1;
+    const currentXp = gamificationUser.currentXp || 0;
+    const nextLevelXp = gamificationUser.nextLevelXp || 1000;
     const xpPercentage = Math.min((currentXp / nextLevelXp) * 100, 100);
 
     // Determine Title based on Level
@@ -72,6 +144,7 @@ const Dashboard: React.FC = () => {
     const formatCurrency = (val: number) => {
         return isPrivacyMode ? 'R$ •••••' : `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     };
+
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
@@ -295,7 +368,6 @@ const Dashboard: React.FC = () => {
                                 <div className="p-2.5 bg-secondary/10 rounded-xl text-secondary border border-secondary/20">
                                     <ArrowUpRight size={22} />
                                 </div>
-                                <Badge type="income">+12%</Badge>
                             </div>
                             <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">Entradas</p>
                             <h3 className="text-2xl font-bold text-white mt-1 tracking-tight">{formatCurrency(totalIncome)}</h3>
@@ -340,7 +412,7 @@ const Dashboard: React.FC = () => {
                                 <Badge type="neutral">Investido</Badge>
                             </div>
                             <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">Patrimônio</p>
-                            <h3 className="text-2xl font-bold text-white mt-1 tracking-tight">{formatCurrency(12400)}</h3>
+                            <h3 className="text-2xl font-bold text-white mt-1 tracking-tight">{formatCurrency(totalPatrimony)}</h3>
                         </Card>
                     </div>
 
@@ -390,7 +462,7 @@ const Dashboard: React.FC = () => {
                             )}
                             <ResponsiveContainer width="100%" height="100%">
                                 {chartType === 'bar' ? (
-                                    <BarChart data={mockChartData} barGap={4}>
+                                    <BarChart data={chartData} barGap={4}>
                                         <defs>
                                             <linearGradient id="barIncome" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="#34d399" stopOpacity={1} />
@@ -414,7 +486,7 @@ const Dashboard: React.FC = () => {
                                         <Bar dataKey="expense" fill="url(#barExpense)" radius={[4, 4, 0, 0]} name="Despesa" maxBarSize={40} />
                                     </BarChart>
                                 ) : (
-                                    <AreaChart data={mockChartData}>
+                                    <AreaChart data={chartData}>
                                         <defs>
                                             <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="#34d399" stopOpacity={0.3} />
@@ -453,12 +525,7 @@ const Dashboard: React.FC = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={[
-                                            { name: 'Moradia', value: 1200 },
-                                            { name: 'Alimentação', value: 450 },
-                                            { name: 'Transporte', value: 300 },
-                                            { name: 'Lazer', value: 200 },
-                                        ]}
+                                        data={expenseByCategory.length > 0 ? expenseByCategory : [{ name: 'Sem dados', value: 1 }]}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={65}
@@ -468,7 +535,7 @@ const Dashboard: React.FC = () => {
                                         stroke="none"
                                         cornerRadius={6}
                                     >
-                                        {mockChartData.map((entry, index) => (
+                                        {(expenseByCategory.length > 0 ? expenseByCategory : [{ name: 'Sem dados', value: 1 }]).map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
@@ -477,7 +544,7 @@ const Dashboard: React.FC = () => {
                                 </PieChart>
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-                                <span className="text-2xl font-bold text-white tracking-tight">{isPrivacyMode ? '••••' : 'R$ 2.1k'}</span>
+                                <span className="text-2xl font-bold text-white tracking-tight">{isPrivacyMode ? '••••' : formatCurrency(totalExpensesByCategory)}</span>
                                 <span className="text-[10px] text-textMuted uppercase tracking-widest">Total</span>
                             </div>
                         </div>
@@ -491,7 +558,7 @@ const Dashboard: React.FC = () => {
                         <button className="text-sm text-primary hover:text-white transition-colors" onClick={() => navigate(AppRoutes.TRANSACTIONS)}>Ver Extrato</button>
                     </div>
                     <div className="space-y-3">
-                        {mockTransactions.slice(0, 5).map((t) => (
+                        {transactions.slice(0, 5).map((t) => (
                             <div key={t.id} className="flex items-center justify-between p-4 bg-surface border border-surfaceHighlight rounded-xl hover:bg-surfaceHighlight transition-colors active:scale-[0.99]">
                                 <div className="flex items-center gap-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-secondary/10 text-secondary' : 'bg-surfaceHighlight text-textMuted'}`}>

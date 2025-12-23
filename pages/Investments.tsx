@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Input, triggerCoinExplosion } from '../components/UI';
 import { Investment } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -8,7 +8,79 @@ import { useGamification } from '../context/GamificationContext';
 import { AIConsultant } from '../components/AIConsultant';
 import { useInvestments } from '../hooks/useDatabase';
 import { getMultipleQuotes, searchStocks, formatBRL, formatPercentChange, getChangeColor, POPULAR_STOCKS, StockQuote } from '../services/stockService';
+import { searchAssets, KnownAsset } from '../services/knownAssetsService';
 
+// Known crypto tickers for auto-detection
+const KNOWN_CRYPTOS = [
+    'BTC', 'BITCOIN', 'ETH', 'ETHEREUM', 'SOL', 'SOLANA', 'ADA', 'CARDANO',
+    'DOT', 'POLKADOT', 'XRP', 'RIPPLE', 'DOGE', 'DOGECOIN', 'SHIB', 'SHIBA',
+    'MATIC', 'POLYGON', 'LTC', 'LITECOIN', 'LINK', 'CHAINLINK', 'UNI', 'UNISWAP',
+    'AVAX', 'AVALANCHE', 'ATOM', 'COSMOS', 'FTM', 'FANTOM', 'NEAR', 'ALGO',
+    'BNB', 'BINANCE', 'USDT', 'TETHER', 'USDC', 'BUSD', 'DAI', 'APE', 'APT',
+    'ARB', 'ARBITRUM', 'OP', 'OPTIMISM', 'PEPE', 'SAND', 'MANA', 'AXS', 'SLP',
+    'TRX', 'TRON', 'VET', 'VECHAIN', 'EOS', 'XLM', 'STELLAR', 'XMR', 'MONERO',
+    'NEO', 'IOTA', 'ETC', 'LUNA', 'FIL', 'FILECOIN', 'THETA', 'XTZ', 'TEZOS',
+    'AAVE', 'MKR', 'MAKER', 'COMP', 'COMPOUND', 'SNX', 'CRV', 'CURVE', 'SUSHI',
+    'YFI', 'YEARN', '1INCH', 'BAT', 'ENJ', 'ENJIN', 'CHZ', 'CHILIZ'
+];
+
+// Popular Brazilian stock tickers for validation
+const KNOWN_STOCKS = [
+    'PETR', 'VALE', 'ITUB', 'BBDC', 'BBAS', 'ABEV', 'WEGE', 'RENT', 'SUZB',
+    'GGBR', 'CSNA', 'USIM', 'BRAP', 'CPLE', 'ELET', 'CMIG', 'SBSP', 'SAPR',
+    'RADL', 'LREN', 'MGLU', 'VVAR', 'PCAR', 'BTOW', 'NTCO', 'HYPE', 'QUAL',
+    'HAPV', 'GNDI', 'FLRY', 'CIEL', 'B3SA', 'CVCB', 'GOLL', 'AZUL', 'EMBR',
+    'JBSS', 'MRFG', 'BEEF', 'BRFS', 'MRVE', 'CYRE', 'EZTC', 'EVEN', 'DIRR',
+    'TOTS', 'POSI', 'LWSA', 'MODL', 'INTB', 'CASH', 'BPAC', 'SANB', 'BIDI',
+    'MULT', 'BRML', 'IGTI', 'ALSO', 'LOGG', 'TRPL', 'TAEE', 'ENEV', 'ENBR',
+    'KLBN', 'PRIO', 'RRRP', 'RECV', 'CSAN', 'UGPA', 'VBBR', 'RAIZ', 'SLCE',
+    'AGRO', 'SMTO', 'ARZZ', 'SOMA', 'VIVT', 'TIMS', 'OIBR'
+];
+
+// Function to auto-detect asset type based on ticker
+const detectAssetType = (ticker: string): 'Ações' | 'Cripto' | 'Renda Fixa' | 'FIIs' | 'Outros' => {
+    const upperTicker = ticker.toUpperCase().trim();
+
+    // Check if it's a known crypto
+    if (KNOWN_CRYPTOS.some(crypto =>
+        upperTicker === crypto ||
+        upperTicker.includes(crypto) ||
+        upperTicker.startsWith(crypto)
+    )) {
+        return 'Cripto';
+    }
+
+    // Brazilian stock patterns - ends with number (PETR4, VALE3, ITUB4)
+    if (/^[A-Z]{4}[0-9]{1,2}$/.test(upperTicker)) {
+        const baseSymbol = upperTicker.slice(0, 4);
+        // FIIs typically end with 11
+        if (upperTicker.endsWith('11')) {
+            return 'FIIs';
+        }
+        // Validate it's a known stock base
+        if (KNOWN_STOCKS.includes(baseSymbol)) {
+            return 'Ações';
+        }
+        // If ends with 3, 4, 5, 6 - likely a stock even if not in our list
+        if (/[3-6]$/.test(upperTicker)) {
+            return 'Ações';
+        }
+    }
+
+    // Brazilian stock patterns - BDRs end with 34, 35
+    if (/^[A-Z]{4}(34|35)$/.test(upperTicker)) {
+        return 'Ações';
+    }
+
+    // Renda Fixa patterns
+    const rendaFixaKeywords = ['CDB', 'LCI', 'LCA', 'TESOURO', 'SELIC', 'IPCA+', 'CDI', 'DEBENTURE', 'POUPANCA', 'POUPANÇA'];
+    if (rendaFixaKeywords.some(kw => upperTicker.includes(kw))) {
+        return 'Renda Fixa';
+    }
+
+    // If nothing matches a valid pattern, return "Outros"
+    return 'Outros';
+};
 
 const Investments: React.FC = () => {
     const { addXp } = useGamification();
@@ -30,6 +102,56 @@ const Investments: React.FC = () => {
     const [assetName, setAssetName] = useState('');
     const [assetType, setAssetType] = useState('Ações');
     const [amountInvested, setAmountInvested] = useState('');
+
+    // Autocomplete States
+    const [suggestions, setSuggestions] = useState<KnownAsset[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const autocompleteRef = useRef<HTMLDivElement>(null);
+
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Search for assets as user types
+    const handleAssetSearch = async (query: string) => {
+        setAssetName(query);
+
+        if (query.length >= 2) {
+            const detectedType = detectAssetType(query);
+            setAssetType(detectedType);
+
+            setIsSearching(true);
+            try {
+                const results = await searchAssets(query, 8);
+                setSuggestions(results);
+                setShowSuggestions(results.length > 0);
+            } catch (error) {
+                console.error('Error searching assets:', error);
+                setSuggestions([]);
+            } finally {
+                setIsSearching(false);
+            }
+        } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+    };
+
+    // Select suggestion
+    const handleSelectSuggestion = (asset: KnownAsset) => {
+        setAssetName(asset.symbol);
+        setAssetType(asset.type);
+        setShowSuggestions(false);
+        setSuggestions([]);
+    };
 
     // Simulator State
     const [simMonthly, setSimMonthly] = useState('500');
@@ -647,25 +769,119 @@ const Investments: React.FC = () => {
                             <button onClick={() => setIsAddModalOpen(false)} className="text-textMuted hover:text-white"><X size={20} /></button>
                         </div>
                         <form onSubmit={handleAddAsset} className="p-6 space-y-4">
-                            <Input
-                                label="Ticker ou Nome"
-                                placeholder="Ex: PETR4, Bitcoin"
-                                required
-                                value={assetName}
-                                onChange={e => setAssetName(e.target.value)}
-                            />
+                            <div ref={autocompleteRef} className="relative">
+                                <label className="text-sm font-medium text-textMuted mb-1.5 block">Ticker ou Nome</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Ex: PETR4, Bitcoin, XPML11"
+                                        required
+                                        value={assetName}
+                                        onChange={e => handleAssetSearch(e.target.value)}
+                                        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                                        className="w-full px-4 py-3 bg-inputBg border border-inputBorder rounded-xl text-white placeholder-textMuted focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                                        autoComplete="off"
+                                    />
+                                    {isSearching && (
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                            <Loader2 size={16} className="animate-spin text-textMuted" />
+                                        </div>
+                                    )}
+                                </div>
 
-                            <Input
-                                label="Tipo de Ativo"
-                                as="select"
-                                value={assetType}
-                                onChange={e => setAssetType(e.target.value)}
-                            >
-                                <option value="Ações">Ações</option>
-                                <option value="Cripto">Criptomoedas</option>
-                                <option value="Renda Fixa">Renda Fixa</option>
-                                <option value="FIIs">FIIs</option>
-                            </Input>
+                                {/* Autocomplete Dropdown */}
+                                {showSuggestions && suggestions.length > 0 && (
+                                    <div className="absolute z-50 w-full mt-1 bg-surface border border-surfaceHighlight rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                                        {suggestions.map((asset, index) => (
+                                            <button
+                                                key={asset.id || index}
+                                                type="button"
+                                                onClick={() => handleSelectSuggestion(asset)}
+                                                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-surfaceHighlight transition-colors text-left border-b border-surfaceHighlight/50 last:border-0"
+                                            >
+                                                <span className={`text-lg ${asset.type === 'Cripto' ? 'text-amber-400' :
+                                                        asset.type === 'FIIs' ? 'text-blue-400' :
+                                                            asset.type === 'Renda Fixa' ? 'text-green-400' :
+                                                                'text-purple-400'
+                                                    }`}>
+                                                    {asset.type === 'Cripto' && '₿'}
+                                                    {asset.type === 'FIIs' && '🏢'}
+                                                    {asset.type === 'Renda Fixa' && '💵'}
+                                                    {asset.type === 'Ações' && '📈'}
+                                                </span>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-white">{asset.symbol}</span>
+                                                        <span className={`text-xs px-1.5 py-0.5 rounded ${asset.type === 'Cripto' ? 'bg-amber-500/20 text-amber-400' :
+                                                                asset.type === 'FIIs' ? 'bg-blue-500/20 text-blue-400' :
+                                                                    asset.type === 'Renda Fixa' ? 'bg-green-500/20 text-green-400' :
+                                                                        'bg-purple-500/20 text-purple-400'
+                                                            }`}>
+                                                            {asset.type}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-textMuted truncate">{asset.name}</p>
+                                                    {asset.sector && (
+                                                        <p className="text-xs text-textMuted/60">{asset.sector}</p>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Type badge */}
+                                {assetName.length >= 2 && !showSuggestions && (
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <span className={`text-xs px-2 py-1 rounded-full ${assetType === 'Cripto' ? 'bg-amber-500/20 text-amber-400' :
+                                            assetType === 'FIIs' ? 'bg-blue-500/20 text-blue-400' :
+                                                assetType === 'Renda Fixa' ? 'bg-green-500/20 text-green-400' :
+                                                    assetType === 'Outros' ? 'bg-red-500/20 text-red-400' :
+                                                        'bg-purple-500/20 text-purple-400'
+                                            }`}>
+                                            {assetType === 'Cripto' && '₿ '}
+                                            {assetType === 'FIIs' && '🏢 '}
+                                            {assetType === 'Renda Fixa' && '💵 '}
+                                            {assetType === 'Ações' && '📈 '}
+                                            {assetType === 'Outros' && '❓ '}
+                                            {assetType === 'Outros' ? 'Não reconhecido' : `Detectado: ${assetType}`}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Tipo de Ativo - Read-only, auto-detected */}
+                            <div>
+                                <label className="text-sm font-medium text-textMuted mb-1.5 block">Tipo de Ativo</label>
+                                <div className={`w-full px-4 py-3 rounded-xl border flex items-center gap-3 transition-all ${assetType === 'Cripto' ? 'bg-amber-500/10 border-amber-500/30' :
+                                    assetType === 'FIIs' ? 'bg-blue-500/10 border-blue-500/30' :
+                                        assetType === 'Renda Fixa' ? 'bg-green-500/10 border-green-500/30' :
+                                            assetType === 'Outros' ? 'bg-red-500/10 border-red-500/30' :
+                                                'bg-purple-500/10 border-purple-500/30'
+                                    }`}>
+                                    <span className="text-xl">
+                                        {assetType === 'Cripto' && '₿'}
+                                        {assetType === 'FIIs' && '🏢'}
+                                        {assetType === 'Renda Fixa' && '💵'}
+                                        {assetType === 'Ações' && '📈'}
+                                        {assetType === 'Outros' && '❓'}
+                                    </span>
+                                    <span className={`font-semibold ${assetType === 'Cripto' ? 'text-amber-400' :
+                                        assetType === 'FIIs' ? 'text-blue-400' :
+                                            assetType === 'Renda Fixa' ? 'text-green-400' :
+                                                assetType === 'Outros' ? 'text-red-400' :
+                                                    'text-purple-400'
+                                        }`}>
+                                        {assetType}
+                                    </span>
+                                    <span className="text-[10px] text-textMuted ml-auto bg-black/20 px-2 py-0.5 rounded-full">Automático</span>
+                                </div>
+                                {assetType === 'Outros' && (
+                                    <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                                        ⚠️ Ticker não reconhecido. Use formato brasileiro (PETR4) ou nome de crypto (Bitcoin).
+                                    </p>
+                                )}
+                            </div>
 
                             <Input
                                 label="Valor Total Investido (R$)"
@@ -677,7 +893,7 @@ const Investments: React.FC = () => {
                             />
 
                             <div className="p-3 bg-surfaceHighlight rounded-xl text-xs text-textMuted">
-                                <p>💡 Em um app real, o valor atual seria atualizado automaticamente via API (B3/Binance).</p>
+                                <p className="text-[10px] opacity-70">🔍 PETR4, VALE3 → Ações | XPML11 → FIIs | Bitcoin, ETH → Cripto | CDB, Tesouro → Renda Fixa</p>
                             </div>
 
                             <Button type="submit" className="mt-4">Salvar na Carteira</Button>

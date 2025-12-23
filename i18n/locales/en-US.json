@@ -1,0 +1,241 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "add": "Add",
+        "close": "Close",
+        "confirm": "Confirm",
+        "search": "Search",
+        "filter": "Filter",
+        "export": "Export",
+        "import": "Import",
+        "back": "Back",
+        "next": "Next",
+        "previous": "Previous",
+        "yes": "Yes",
+        "no": "No",
+        "or": "or",
+        "and": "and",
+        "all": "All",
+        "none": "None",
+        "error": "Error",
+        "success": "Success",
+        "warning": "Warning"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "transactions": "Transactions",
+        "budget": "Budget",
+        "bills": "Bills",
+        "goals": "Goals",
+        "investments": "Investments",
+        "loans": "Loans",
+        "reports": "Reports",
+        "profile": "Profile",
+        "settings": "Settings",
+        "logout": "Logout"
+    },
+    "dashboard": {
+        "greeting": "Hello, {{name}}",
+        "overview": "Overview of your empire.",
+        "income": "Income",
+        "expenses": "Expenses",
+        "balance": "Balance",
+        "level": "Level {{level}}",
+        "levelProgress": "Level Progress",
+        "xpProgress": "{{current}} / {{max}} XP",
+        "recentTransactions": "Recent Transactions",
+        "upcomingBills": "Upcoming Bills",
+        "daysLeft": "{{days}}d",
+        "viewAll": "View all"
+    },
+    "transactions": {
+        "title": "Transactions",
+        "newTransaction": "New Transaction",
+        "description": "Description",
+        "amount": "Amount",
+        "date": "Date",
+        "category": "Category",
+        "type": "Type",
+        "income": "Income",
+        "expense": "Expense",
+        "receipt": "Receipt",
+        "attachReceipt": "Attach Receipt",
+        "camera": "Camera",
+        "upload": "Upload",
+        "noTransactions": "No transactions found",
+        "importStatement": "Import Statement"
+    },
+    "budget": {
+        "title": "Budget",
+        "subtitle": "Control your spending by category",
+        "setBudget": "Set Budget",
+        "spent": "Spent",
+        "limit": "Limit",
+        "remaining": "Remaining",
+        "exceeded": "Budget exceeded!",
+        "onTrack": "On track"
+    },
+    "goals": {
+        "title": "Goals",
+        "subtitle": "Your savings boxes",
+        "newGoal": "New Goal",
+        "targetAmount": "Target Amount",
+        "currentAmount": "Current Amount",
+        "remaining": "{{amount}} left",
+        "deadline": "Deadline",
+        "progress": "{{percent}}% complete",
+        "activeGoals": "Active Goals",
+        "saved": "Saved",
+        "average": "Average"
+    },
+    "investments": {
+        "title": "Investments",
+        "subtitle": "Real-time quotes",
+        "portfolio": "Total Portfolio",
+        "yearReturn": "+{{percent}}% this year",
+        "addAsset": "Add Asset",
+        "ticker": "Ticker or Name",
+        "type": "Asset Type",
+        "amount": "Quantity",
+        "price": "Price",
+        "value": "Value",
+        "stocks": "Stocks",
+        "crypto": "Crypto",
+        "bonds": "Bonds",
+        "reits": "REITs",
+        "other": "Other"
+    },
+    "bills": {
+        "title": "Bills",
+        "subtitle": "Your recurring bills",
+        "dueDate": "Due Date",
+        "paid": "Paid",
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "markAsPaid": "Mark as Paid",
+        "addBill": "New Bill",
+        "recurring": "Recurring",
+        "dueIn": "Due in {{days}} days",
+        "dueToday": "Due today",
+        "overdueBy": "{{days}} days overdue"
+    },
+    "profile": {
+        "title": "Profile",
+        "personalInfo": "Personal Information",
+        "name": "Name",
+        "email": "Email",
+        "language": "Language",
+        "currency": "Currency",
+        "theme": "Theme",
+        "darkMode": "Dark Mode",
+        "lightMode": "Light Mode",
+        "notifications": "Notifications",
+        "plan": "Plan",
+        "freePlan": "Free Plan",
+        "proPlan": "Pro Plan",
+        "upgrade": "Upgrade"
+    },
+    "auth": {
+        "login": "Login",
+        "register": "Create Account",
+        "logout": "Logout",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "forgotPassword": "Forgot password",
+        "noAccount": "Don't have an account?",
+        "hasAccount": "Already have an account?",
+        "signInWith": "Sign in with {{provider}}",
+        "orContinueWith": "or continue with"
+    },
+    "landing": {
+        "taglines": {
+            "ai": "🤖 AI that reads your bills",
+            "quotes": "📊 Real-time quotes",
+            "gamification": "🎮 Gamification that engages",
+            "mobile": "📱 Works like a native app"
+        },
+        "hero": {
+            "title": "How much does your",
+            "highlight": "Financial Peace",
+            "titleEnd": "cost?",
+            "subtitle": "Stop losing money. Reynar automates, organizes, and gamifies your financial life in one secure place.",
+            "cta": "Create Free Account",
+            "seeFeatures": "See features"
+        },
+        "stats": {
+            "transactions": "Transactions tracked",
+            "saved": "Saved",
+            "rating": "Average rating"
+        },
+        "howItWorks": {
+            "title": "How It Works",
+            "subtitle": "3 steps to take control",
+            "step1": {
+                "title": "Connect",
+                "desc": "Import bank statements or scan receipts with AI. Support for CSV, OFX and PDF."
+            },
+            "step2": {
+                "title": "Organize",
+                "desc": "AI categorizes automatically. Set budgets and track every penny."
+            },
+            "step3": {
+                "title": "Grow",
+                "desc": "Track investments, hit goals and earn XP for every financial achievement."
+            }
+        },
+        "features": {
+            "title": "Powerful Features",
+            "subtitle": "Cutting-edge technology to simplify your financial life."
+        },
+        "pricing": {
+            "title": "One simple price.",
+            "highlight": "Unlimited access.",
+            "subtitle": "No hidden fees. All tools for less than a snack.",
+            "monthly": "Monthly",
+            "yearly": "Yearly (-17%)",
+            "guarantee": "7-Day Unconditional Guarantee",
+            "encryption": "End-to-End Encryption",
+            "cancelAnytime": "Cancel in 1 click",
+            "freeTrial": "7 Days Free",
+            "planName": "Reynar PRO Plan",
+            "cta": "Start Now",
+            "perMonth": "Billed monthly",
+            "perYear": "Billed once yearly"
+        },
+        "faq": {
+            "title": "Common Questions"
+        }
+    },
+    "categories": {
+        "food": "Food",
+        "transport": "Transport",
+        "entertainment": "Entertainment",
+        "shopping": "Shopping",
+        "health": "Health",
+        "education": "Education",
+        "bills": "Bills",
+        "subscriptions": "Subscriptions",
+        "salary": "Salary",
+        "freelance": "Freelance",
+        "investments": "Investments",
+        "other": "Other"
+    },
+    "currency": {
+        "symbol": "$",
+        "code": "USD",
+        "format": "{{symbol}}{{value}}"
+    },
+    "date": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "tomorrow": "Tomorrow",
+        "thisWeek": "This week",
+        "thisMonth": "This month",
+        "thisYear": "This year"
+    }
+}

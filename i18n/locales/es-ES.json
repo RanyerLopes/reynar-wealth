@@ -1,0 +1,240 @@
+{
+    "common": {
+        "loading": "Cargando...",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "add": "Agregar",
+        "close": "Cerrar",
+        "confirm": "Confirmar",
+        "search": "Buscar",
+        "filter": "Filtrar",
+        "export": "Exportar",
+        "import": "Importar",
+        "back": "Volver",
+        "next": "Siguiente",
+        "previous": "Anterior",
+        "yes": "Sí",
+        "no": "No",
+        "or": "o",
+        "and": "y",
+        "all": "Todos",
+        "none": "Ninguno",
+        "error": "Error",
+        "success": "Éxito",
+        "warning": "Advertencia"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "transactions": "Transacciones",
+        "budget": "Presupuesto",
+        "bills": "Cuentas",
+        "goals": "Metas",
+        "investments": "Inversiones",
+        "loans": "Préstamos",
+        "reports": "Reportes",
+        "profile": "Perfil",
+        "settings": "Configuración",
+        "logout": "Salir"
+    },
+    "dashboard": {
+        "greeting": "Hola, {{name}}",
+        "overview": "Vista general de tu imperio.",
+        "income": "Ingresos",
+        "expenses": "Gastos",
+        "balance": "Saldo",
+        "level": "Nivel {{level}}",
+        "levelProgress": "Progreso del Nivel",
+        "xpProgress": "{{current}} / {{max}} XP",
+        "recentTransactions": "Últimas Transacciones",
+        "upcomingBills": "Próximas Cuentas",
+        "daysLeft": "{{days}}d",
+        "viewAll": "Ver todo"
+    },
+    "transactions": {
+        "title": "Transacciones",
+        "newTransaction": "Nueva Transacción",
+        "description": "Descripción",
+        "amount": "Monto",
+        "date": "Fecha",
+        "category": "Categoría",
+        "type": "Tipo",
+        "income": "Ingreso",
+        "expense": "Gasto",
+        "receipt": "Comprobante",
+        "attachReceipt": "Adjuntar Comprobante",
+        "camera": "Cámara",
+        "upload": "Subir",
+        "noTransactions": "No se encontraron transacciones",
+        "importStatement": "Importar Extracto"
+    },
+    "budget": {
+        "title": "Presupuesto",
+        "subtitle": "Controla tus gastos por categoría",
+        "setBudget": "Definir Presupuesto",
+        "spent": "Gastado",
+        "limit": "Límite",
+        "remaining": "Restante",
+        "exceeded": "¡Presupuesto excedido!",
+        "onTrack": "Dentro del presupuesto"
+    },
+    "goals": {
+        "title": "Metas",
+        "subtitle": "Tus cajas de sueños",
+        "newGoal": "Nueva Meta",
+        "targetAmount": "Monto Objetivo",
+        "currentAmount": "Monto Actual",
+        "remaining": "Faltan {{amount}}",
+        "deadline": "Plazo",
+        "progress": "{{percent}}% completado",
+        "activeGoals": "Metas Activas",
+        "saved": "Ahorrado",
+        "average": "Promedio"
+    },
+    "investments": {
+        "title": "Inversiones",
+        "subtitle": "Cotizaciones en tiempo real",
+        "portfolio": "Patrimonio Total",
+        "yearReturn": "+{{percent}}% este año",
+        "addAsset": "Agregar Activo",
+        "ticker": "Ticker o Nombre",
+        "type": "Tipo de Activo",
+        "amount": "Cantidad",
+        "price": "Precio",
+        "value": "Valor",
+        "stocks": "Acciones",
+        "crypto": "Cripto",
+        "bonds": "Renta Fija",
+        "reits": "Fondos Inmobiliarios",
+        "other": "Otros"
+    },
+    "bills": {
+        "title": "Cuentas por Pagar",
+        "subtitle": "Tus cuentas recurrentes",
+        "dueDate": "Vencimiento",
+        "paid": "Pagado",
+        "pending": "Pendiente",
+        "overdue": "Vencido",
+        "markAsPaid": "Marcar como Pagado",
+        "addBill": "Nueva Cuenta",
+        "recurring": "Recurrente",
+        "dueIn": "Vence en {{days}} días",
+        "dueToday": "Vence hoy",
+        "overdueBy": "Vencido hace {{days}} días"
+    },
+    "profile": {
+        "title": "Perfil",
+        "personalInfo": "Información Personal",
+        "name": "Nombre",
+        "email": "Correo",
+        "language": "Idioma",
+        "currency": "Moneda",
+        "theme": "Tema",
+        "darkMode": "Modo Oscuro",
+        "lightMode": "Modo Claro",
+        "notifications": "Notificaciones",
+        "plan": "Plan",
+        "freePlan": "Plan Gratis",
+        "proPlan": "Plan Pro",
+        "upgrade": "Mejorar Plan"
+    },
+    "auth": {
+        "login": "Iniciar Sesión",
+        "register": "Crear Cuenta",
+        "logout": "Salir",
+        "email": "Correo",
+        "password": "Contraseña",
+        "confirmPassword": "Confirmar Contraseña",
+        "forgotPassword": "Olvidé mi contraseña",
+        "noAccount": "¿No tienes cuenta?",
+        "hasAccount": "¿Ya tienes cuenta?",
+        "signInWith": "Entrar con {{provider}}",
+        "orContinueWith": "o continúa con"
+    },
+    "landing": {
+        "taglines": {
+            "ai": "🤖 IA que lee tus recibos",
+            "quotes": "📊 Cotizaciones en tiempo real",
+            "gamification": "🎮 Gamificación que engancha",
+            "mobile": "📱 Funciona como app nativa"
+        },
+        "hero": {
+            "title": "¿Cuánto cuesta tu",
+            "highlight": "Paz Financiera?",
+            "subtitle": "Deja de perder dinero. Reynar automatiza, organiza y gamifica tu vida financiera en un solo lugar seguro.",
+            "cta": "Crear Cuenta Gratis",
+            "seeFeatures": "Ver funciones"
+        },
+        "stats": {
+            "transactions": "Transacciones rastreadas",
+            "saved": "Ahorrados",
+            "rating": "Calificación promedio"
+        },
+        "howItWorks": {
+            "title": "Cómo Funciona",
+            "subtitle": "3 pasos para tomar el control",
+            "step1": {
+                "title": "Conecta",
+                "desc": "Importa extractos bancarios o escanea comprobantes con IA. Soporte para CSV, OFX y PDF."
+            },
+            "step2": {
+                "title": "Organiza",
+                "desc": "La IA categoriza automáticamente. Define presupuestos y rastrea cada centavo."
+            },
+            "step3": {
+                "title": "Crece",
+                "desc": "Rastrea inversiones, alcanza metas y gana XP por cada logro financiero."
+            }
+        },
+        "features": {
+            "title": "Funciones Poderosas",
+            "subtitle": "Tecnología de punta para simplificar tu vida financiera."
+        },
+        "pricing": {
+            "title": "Un precio simple.",
+            "highlight": "Acceso ilimitado.",
+            "subtitle": "Sin tarifas ocultas. Todas las herramientas por menos que un snack.",
+            "monthly": "Mensual",
+            "yearly": "Anual (-17%)",
+            "guarantee": "Garantía Incondicional de 7 Días",
+            "encryption": "Encriptación de Punta",
+            "cancelAnytime": "Cancela en 1 clic",
+            "freeTrial": "7 Días Gratis",
+            "planName": "Plan Reynar PRO",
+            "cta": "Empezar Ahora",
+            "perMonth": "Cobrado mensualmente",
+            "perYear": "Cobrado una vez al año"
+        },
+        "faq": {
+            "title": "Preguntas Frecuentes"
+        }
+    },
+    "categories": {
+        "food": "Alimentación",
+        "transport": "Transporte",
+        "entertainment": "Entretenimiento",
+        "shopping": "Compras",
+        "health": "Salud",
+        "education": "Educación",
+        "bills": "Cuentas",
+        "subscriptions": "Suscripciones",
+        "salary": "Salario",
+        "freelance": "Freelance",
+        "investments": "Inversiones",
+        "other": "Otros"
+    },
+    "currency": {
+        "symbol": "€",
+        "code": "EUR",
+        "format": "{{value}} {{symbol}}"
+    },
+    "date": {
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "tomorrow": "Mañana",
+        "thisWeek": "Esta semana",
+        "thisMonth": "Este mes",
+        "thisYear": "Este año"
+    }
+}

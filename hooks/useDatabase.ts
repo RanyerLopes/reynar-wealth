@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import * as db from '../services/databaseService';
 import { Transaction, Bill, Investment, Goal, Loan, CreditCard } from '../types';
-import { mockTransactions, mockBills, mockInvestments, mockGoals, mockLoans, mockCards } from '../services/mockData';
 
 // Hook for managing transactions
 export const useTransactions = () => {
@@ -13,8 +12,7 @@ export const useTransactions = () => {
 
     const fetchTransactions = useCallback(async () => {
         if (!user) {
-            // Use mock data if not authenticated
-            setTransactions(mockTransactions);
+            setTransactions([]);
             setLoading(false);
             return;
         }
@@ -22,11 +20,11 @@ export const useTransactions = () => {
         try {
             setLoading(true);
             const data = await db.getTransactions(user.id);
-            setTransactions(data.length > 0 ? data : mockTransactions);
+            setTransactions(data);
         } catch (err) {
             console.error('Error fetching transactions:', err);
             setError('Erro ao carregar transações');
-            setTransactions(mockTransactions);
+            setTransactions([]);
         } finally {
             setLoading(false);
         }
@@ -38,7 +36,6 @@ export const useTransactions = () => {
 
     const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
         if (!user) {
-            // Fallback to localStorage if not authenticated
             const newTx = { ...transaction, id: Math.random().toString() };
             setTransactions(prev => [newTx, ...prev]);
             return newTx;
@@ -73,7 +70,6 @@ export const useTransactions = () => {
                 setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updated } : t));
                 return updated;
             } else {
-                // Fallback for non-authenticated users
                 setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
                 return { id, ...updates };
             }
@@ -94,7 +90,7 @@ export const useBills = () => {
 
     const fetchBills = useCallback(async () => {
         if (!user) {
-            setBills(mockBills);
+            setBills([]);
             setLoading(false);
             return;
         }
@@ -102,10 +98,10 @@ export const useBills = () => {
         try {
             setLoading(true);
             const data = await db.getBills(user.id);
-            setBills(data.length > 0 ? data : mockBills);
+            setBills(data);
         } catch (err) {
             console.error('Error fetching bills:', err);
-            setBills(mockBills);
+            setBills([]);
         } finally {
             setLoading(false);
         }
@@ -160,7 +156,7 @@ export const useInvestments = () => {
 
     const fetchInvestments = useCallback(async () => {
         if (!user) {
-            setInvestments(mockInvestments);
+            setInvestments([]);
             setLoading(false);
             return;
         }
@@ -168,10 +164,10 @@ export const useInvestments = () => {
         try {
             setLoading(true);
             const data = await db.getInvestments(user.id);
-            setInvestments(data.length > 0 ? data : mockInvestments);
+            setInvestments(data);
         } catch (err) {
             console.error('Error fetching investments:', err);
-            setInvestments(mockInvestments);
+            setInvestments([]);
         } finally {
             setLoading(false);
         }
@@ -226,7 +222,7 @@ export const useGoals = () => {
 
     const fetchGoals = useCallback(async () => {
         if (!user) {
-            setGoals(mockGoals);
+            setGoals([]);
             setLoading(false);
             return;
         }
@@ -234,10 +230,10 @@ export const useGoals = () => {
         try {
             setLoading(true);
             const data = await db.getGoals(user.id);
-            setGoals(data.length > 0 ? data : mockGoals);
+            setGoals(data);
         } catch (err) {
             console.error('Error fetching goals:', err);
-            setGoals(mockGoals);
+            setGoals([]);
         } finally {
             setLoading(false);
         }
@@ -287,7 +283,7 @@ export const useCards = () => {
 
     const fetchCards = useCallback(async () => {
         if (!user) {
-            setCards(mockCards);
+            setCards([]);
             setLoading(false);
             return;
         }
@@ -295,10 +291,10 @@ export const useCards = () => {
         try {
             setLoading(true);
             const data = await db.getCards(user.id);
-            setCards(data.length > 0 ? data : mockCards);
+            setCards(data);
         } catch (err) {
             console.error('Error fetching cards:', err);
-            setCards(mockCards);
+            setCards([]);
         } finally {
             setLoading(false);
         }
@@ -348,7 +344,7 @@ export const useLoans = () => {
 
     const fetchLoans = useCallback(async () => {
         if (!user) {
-            setLoans(mockLoans);
+            setLoans([]);
             setLoading(false);
             return;
         }
@@ -356,10 +352,10 @@ export const useLoans = () => {
         try {
             setLoading(true);
             const data = await db.getLoans(user.id);
-            setLoans(data.length > 0 ? data : mockLoans);
+            setLoans(data);
         } catch (err) {
             console.error('Error fetching loans:', err);
-            setLoans(mockLoans);
+            setLoans([]);
         } finally {
             setLoading(false);
         }

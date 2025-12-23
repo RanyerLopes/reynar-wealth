@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Achievement } from '../types';
-import { mockUser, mockAchievements } from '../services/mockData';
+import { DEFAULT_ACHIEVEMENTS } from '../services/mockData';
 import { triggerCoinExplosion } from '../components/UI';
 
 interface GamificationContextType {
@@ -13,16 +13,28 @@ interface GamificationContextType {
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
 
+// Default user for new accounts (no mock data)
+const DEFAULT_USER: User = {
+  id: '',
+  name: '',
+  email: '',
+  plan: 'basic',
+  privacyMode: false,
+  level: 1,
+  currentXp: 0,
+  nextLevelXp: 1000
+};
+
 export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Load User from LocalStorage or fallback to Mock
+  // Load User from LocalStorage or use default
   const [user, setUser] = useState<User>(() => {
     const stored = localStorage.getItem('finnova_gamification_user');
-    return stored ? JSON.parse(stored) : { ...mockUser, currentXp: 0, level: 1, nextLevelXp: 1000 };
+    return stored ? JSON.parse(stored) : { ...DEFAULT_USER };
   });
 
   const [achievements, setAchievements] = useState<Achievement[]>(() => {
     const stored = localStorage.getItem('finnova_gamification_achievements');
-    return stored ? JSON.parse(stored) : mockAchievements;
+    return stored ? JSON.parse(stored) : DEFAULT_ACHIEVEMENTS;
   });
 
   const [toast, setToast] = useState<{ message: string, type: 'xp' | 'level', id: number } | null>(null);
@@ -59,11 +71,11 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
       if (leveledUp) {
         setTimeout(() => {
-            showToast(`Nível ${newLevel} Alcançado! 👑`, 'level');
-            triggerCoinExplosion(window.innerWidth / 2, window.innerHeight / 2);
+          showToast(`Nível ${newLevel} Alcançado! 👑`, 'level');
+          triggerCoinExplosion(window.innerWidth / 2, window.innerHeight / 2);
         }, 500);
       } else {
-          showToast(`+${amount} XP`, 'xp');
+        showToast(`+${amount} XP`, 'xp');
       }
 
       return {

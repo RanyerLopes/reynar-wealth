@@ -1,14 +1,16 @@
 
 import React, { useState, useRef } from 'react';
-import { User, Mail, Camera, Lock, Save, Shield, CheckCircle, Crown, CreditCard, Sparkles, Receipt, Plus, Trash2, X } from 'lucide-react';
+import { User, Mail, Camera, Lock, Save, Shield, CheckCircle, Crown, CreditCard, Sparkles, Receipt, Plus, Trash2, X, Globe } from 'lucide-react';
 import { Card, Button, Input, triggerCoinExplosion } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage, SupportedLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 
 const Profile: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { language, setLanguage, languages, t } = useLanguage();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // User data state
@@ -168,8 +170,8 @@ const Profile: React.FC = () => {
                                     type="button"
                                     onClick={() => setGender('male')}
                                     className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-all ${gender === 'male'
-                                            ? 'bg-primary/20 border-primary text-primary'
-                                            : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-primary/50'
+                                        ? 'bg-primary/20 border-primary text-primary'
+                                        : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-primary/50'
                                         }`}
                                 >
                                     👑 Masculino
@@ -178,14 +180,48 @@ const Profile: React.FC = () => {
                                     type="button"
                                     onClick={() => setGender('female')}
                                     className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-all ${gender === 'female'
-                                            ? 'bg-pink-500/20 border-pink-500 text-pink-400'
-                                            : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-pink-500/50'
+                                        ? 'bg-pink-500/20 border-pink-500 text-pink-400'
+                                        : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-pink-500/50'
                                         }`}
                                 >
                                     👸 Feminino
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </Card>
+
+                {/* Language Settings Card */}
+                <Card>
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <Globe size={20} className="text-blue-400" /> {t('profile.language')}
+                    </h3>
+                    <p className="text-xs text-textMuted mb-4">
+                        Escolha o idioma da interface e formato de moeda/data.
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                        {(Object.entries(languages) as [SupportedLanguage, typeof languages['pt-BR']][]).map(([code, config]) => (
+                            <button
+                                key={code}
+                                type="button"
+                                onClick={() => setLanguage(code)}
+                                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${language === code
+                                    ? 'bg-primary/20 border-primary text-white'
+                                    : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-primary/50'
+                                    }`}
+                            >
+                                <span className="text-2xl">{config.flag}</span>
+                                <span className="text-xs font-medium">{config.name}</span>
+                                {language === code && (
+                                    <CheckCircle size={14} className="text-primary" />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="mt-4 p-3 bg-surfaceHighlight rounded-xl text-xs text-textMuted">
+                        <p>
+                            <strong className="text-white">{t('profile.currency')}:</strong> {languages[language].currency.symbol} ({languages[language].currency.code})
+                        </p>
                     </div>
                 </Card>
 

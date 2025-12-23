@@ -824,6 +824,31 @@ const Transactions: React.FC = () => {
                                         <Camera size={18} />
                                         <span className="text-xs">Câmera</span>
                                     </button>
+                                    <div className="relative flex-1">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = (event) => {
+                                                        setReceiptImage(event.target?.result as string);
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                                e.target.value = '';
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="w-full p-3 border-2 border-dashed border-surfaceHighlight rounded-xl flex items-center justify-center gap-2 text-textMuted hover:text-white hover:border-primary transition-colors bg-surfaceHighlight/30"
+                                        >
+                                            <Upload size={18} />
+                                            <span className="text-xs">Upload</span>
+                                        </button>
+                                    </div>
                                 </div>
                                 {receiptImage && (
                                     <div className="mt-2 relative w-full h-32 rounded-lg overflow-hidden border border-surfaceHighlight group">
@@ -958,12 +983,44 @@ const Transactions: React.FC = () => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <button
-                                            onClick={() => { setCameraContext('details'); setShowCamera(true); }}
-                                            className="w-full py-4 border-2 border-dashed border-surfaceHighlight rounded-xl flex items-center justify-center gap-2 text-textMuted hover:text-white hover:border-primary transition-all mb-6"
-                                        >
-                                            <Camera size={20} /> Anexar Comprovante
-                                        </button>
+                                        <div className="flex gap-2 mb-6">
+                                            <button
+                                                onClick={() => { setCameraContext('details'); setShowCamera(true); }}
+                                                className="flex-1 py-3 border-2 border-dashed border-surfaceHighlight rounded-xl flex items-center justify-center gap-2 text-textMuted hover:text-white hover:border-primary transition-all"
+                                            >
+                                                <Camera size={18} /> Câmera
+                                            </button>
+                                            <div className="relative flex-1">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file && selectedTransaction) {
+                                                            const reader = new FileReader();
+                                                            reader.onload = (event) => {
+                                                                const imageData = event.target?.result as string;
+                                                                const updated = transactions.map(t =>
+                                                                    t.id === selectedTransaction.id ? { ...t, receiptUrl: imageData } : t
+                                                                );
+                                                                setLocalTransactions(updated);
+                                                                setSelectedTransaction({ ...selectedTransaction, receiptUrl: imageData });
+                                                                addXp(10);
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }
+                                                        e.target.value = '';
+                                                    }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="w-full py-3 border-2 border-dashed border-surfaceHighlight rounded-xl flex items-center justify-center gap-2 text-textMuted hover:text-white hover:border-primary transition-all"
+                                                >
+                                                    <Upload size={18} /> Upload
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
 
                                     <div className="flex gap-3">

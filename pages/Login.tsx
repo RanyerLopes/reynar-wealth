@@ -46,8 +46,10 @@ const Login: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [salary, setSalary] = useState('');
   const [gender, setGender] = useState('male');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -70,8 +72,21 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    // Validações para cadastro
+    if (!isLogin) {
+      if (password.length < 6) {
+        setError('A senha deve ter pelo menos 6 caracteres.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('As senhas não coincidem.');
+        return;
+      }
+    }
+
+    setLoading(true);
 
     try {
       if (isLogin) {
@@ -271,6 +286,30 @@ const Login: React.FC = () => {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+
+              {!isLogin && (
+                <div className="relative animate-fade-in">
+                  <Input
+                    label="Confirmar Senha"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="bg-black/20 focus:bg-black/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-[34px] text-textMuted hover:text-white transition-colors p-1"
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-red-400 text-xs mt-1">As senhas não coincidem</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Error Message */}

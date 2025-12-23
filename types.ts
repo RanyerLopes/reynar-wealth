@@ -20,7 +20,7 @@ export interface Transaction {
 export interface Investment {
   id: string;
   assetName: string;
-  type: 'Ações' | 'Cripto' | 'Renda Fixa' | 'FIIs';
+  type: 'Ações' | 'Cripto' | 'Renda Fixa' | 'FIIs' | 'Outros';
   amountInvested: number;
   currentValue: number;
   performance: number; // percentage
