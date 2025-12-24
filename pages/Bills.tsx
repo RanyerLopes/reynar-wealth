@@ -424,7 +424,7 @@ const Bills: React.FC = () => {
                         <ArrowLeft size={20} />
                     </button>
                     <h3 className="text-xl font-bold text-white">{card.name}</h3>
-                    {invoicePaid && <Badge className="bg-secondary text-black">✓ Paga</Badge>}
+                    {invoicePaid && <Badge type="income" className="bg-secondary text-black">✓ Paga</Badge>}
                 </div>
 
                 {/* Card Summary Header */}

@@ -196,8 +196,6 @@ const Transactions: React.FC = () => {
                     } else {
                         addXp(20);
                     }
-
-                    console.log('Receipt OCR result:', receiptData);
                 } else {
                     // Fallback if OCR fails
                     alert('Não consegui ler o comprovante. Tente uma foto mais nítida ou preencha manualmente.');

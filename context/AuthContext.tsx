@@ -31,7 +31,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     useEffect(() => {
         const initAuth = async () => {
             try {
-                console.log('🔐 Initializing auth...');
 
                 // Get the full URL to check for OAuth tokens
                 const fullUrl = window.location.href;
@@ -39,7 +38,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                 // Check for access_token in URL (OAuth callback)
                 if (fullUrl.includes('access_token=')) {
-                    console.log('🔑 OAuth callback detected');
 
                     // Extract tokens from URL
                     // Tokens can be in the hash part after the route
@@ -51,8 +49,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     const accessToken = params.get('access_token');
                     const refreshToken = params.get('refresh_token');
 
-                    console.log('Access token found:', !!accessToken);
-                    console.log('Refresh token found:', !!refreshToken);
 
                     if (accessToken) {
                         // Set the session manually with the tokens
@@ -64,21 +60,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         if (error) {
                             console.error('❌ Error setting session:', error);
                         } else if (data.session) {
-                            console.log('✅ Session set successfully:', data.session.user.email);
                             setUser(data.session.user);
 
-                            // Clean up URL - redirect to transactions
-                            window.history.replaceState({}, document.title, window.location.pathname + '#/transactions');
+                            // Clean up URL - redirect to dashboard
+                            window.history.replaceState({}, document.title, window.location.pathname + '#/dashboard');
                         }
                     }
                 } else {
                     // No OAuth callback, check for existing session
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session) {
-                        console.log('✅ Existing session found:', session.user.email);
                         setUser(session.user);
-                    } else {
-                        console.log('❌ No session found');
                     }
                 }
             } catch (error) {
@@ -92,7 +84,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // Listen for auth changes
         const { data: { subscription } } = onAuthStateChange((user) => {
-            console.log('🔄 Auth state changed:', user?.email || 'null');
             setUser(user);
             setLoading(false);
         });

@@ -23,12 +23,12 @@ export const triggerCoinExplosion = (x: number, y: number) => {
     el.className = 'coin-particle';
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
-    
+
     // Random trajectory variables used in CSS
     const tx = (Math.random() - 0.5) * 200; // Spread X
     const ty = (Math.random() - 1) * 200 - 50; // Spread Y (mostly up)
     const r = (Math.random() - 0.5) * 360; // Rotation
-    
+
     el.style.setProperty('--tx', `${tx}px`);
     el.style.setProperty('--ty', `${ty}px`);
     el.style.setProperty('--r', `${r}deg`);
@@ -45,8 +45,8 @@ export const triggerCoinExplosion = (x: number, y: number) => {
 // --- Card Component ---
 // Alterado para bg-surface com menor opacidade e efeitos de hover de levitação/neon
 export const Card: React.FC<{ children: React.ReactNode; className?: string; onClick?: (e: React.MouseEvent) => void }> = ({ children, className = '', onClick }) => (
-  <div 
-    onClick={onClick} 
+  <div
+    onClick={onClick}
     className={`bg-surface/60 border border-surfaceHighlight rounded-2xl shadow-lg p-5 backdrop-blur-md 
     transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_15px_30px_-10px_rgba(124,58,237,0.3)] 
     group ${className}`}
@@ -63,7 +63,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', isLoading, className = '', onClick, ...props }) => {
   const baseStyles = "relative w-full py-3 rounded-xl font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2";
-  
+
   const variants = {
     primary: "bg-gradient-to-r from-primary to-violet-800 text-white shadow-[0_0_20px_rgba(124,58,237,0.2)] hover:shadow-[0_0_30px_rgba(124,58,237,0.4)]",
     secondary: "bg-surfaceHighlight text-white hover:bg-zinc-800 border border-zinc-800",
@@ -96,7 +96,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLSe
 
 export const Input: React.FC<InputProps> = ({ label, icon, as = 'input', className = '', children, ...props }) => {
   const Component = as as any;
-  
+
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-medium text-textMuted uppercase tracking-wider ml-1">{label}</label>
@@ -118,42 +118,43 @@ export const Input: React.FC<InputProps> = ({ label, icon, as = 'input', classNa
 };
 
 // --- Badge Component ---
-export const Badge: React.FC<{ type: 'income' | 'expense' | 'neutral'; children: React.ReactNode }> = ({ type, children }) => {
+export const Badge: React.FC<{ type: 'income' | 'expense' | 'neutral'; children: React.ReactNode; className?: string }> = ({ type, children, className = '' }) => {
   const styles = {
     income: "bg-secondary/10 text-secondary border-secondary/20",
     expense: "bg-danger/10 text-danger border-danger/20",
     neutral: "bg-zinc-800 text-zinc-400 border-zinc-700"
   };
   return (
-    <span className={`px-2.5 py-0.5 rounded-md text-xs font-medium border ${styles[type]}`}>
+    <span className={`px-2.5 py-0.5 rounded-md text-xs font-medium border ${styles[type]} ${className}`}>
       {children}
     </span>
   );
 };
 
+
 // --- BRAND NEW LOGO COMPONENT ---
 export const ReynarLogo: React.FC<{ size?: number; className?: string }> = ({ size = 32, className = '' }) => {
   return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <path 
-        d="M2 6L5 15H19L22 6L15 11L12 4L9 11L2 6Z" 
-        fill="url(#reynar-gradient)" 
-        stroke="white" 
-        strokeWidth="1.5" 
+      <path
+        d="M2 6L5 15H19L22 6L15 11L12 4L9 11L2 6Z"
+        fill="url(#reynar-gradient)"
+        stroke="white"
+        strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      <path 
-        d="M5 15H19V18C19 19.1046 18.1046 20 17 20H7C5.89543 20 5 19.1046 5 18V15Z" 
-        fill="url(#reynar-gradient-dark)" 
-        stroke="white" 
-        strokeWidth="1.5" 
+      <path
+        d="M5 15H19V18C19 19.1046 18.1046 20 17 20H7C5.89543 20 5 19.1046 5 18V15Z"
+        fill="url(#reynar-gradient-dark)"
+        stroke="white"
+        strokeWidth="1.5"
         strokeLinejoin="round"
       />
       <circle cx="12" cy="17" r="1.5" fill="white" />

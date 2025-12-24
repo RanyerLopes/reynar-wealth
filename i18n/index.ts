@@ -105,7 +105,8 @@ export function changeLanguage(lang: SupportedLanguage) {
 
 // Translation function
 export function t(key: string, options?: object): string {
-    return i18n.t(key, options as any);
+    return i18n.t(key, options as any) as string;
 }
+
 
 export default i18n;

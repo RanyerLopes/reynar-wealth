@@ -868,7 +868,6 @@ export const parsePDF = async (file: File, extractWithAI: (text: string) => Prom
             }
 
             text = textParts.join('\n');
-            console.log('PDF text extracted successfully:', text.substring(0, 200) + '...');
 
         } catch (pdfError) {
             // Fallback: try to decode as text (for some PDFs)
@@ -901,7 +900,6 @@ export const parsePDF = async (file: File, extractWithAI: (text: string) => Prom
 
             if (aiTransactions.length > 0) {
                 result.transactions = aiTransactions;
-                console.log('AI extraction successful:', aiTransactions.length, 'transactions');
             } else {
                 throw new Error('AI returned no transactions');
             }

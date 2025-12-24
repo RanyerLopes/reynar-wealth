@@ -18,9 +18,8 @@ export const isAdminUser = (email?: string | null): boolean => {
 
 // Auth Helper Functions
 export const signInWithGoogle = async () => {
-    // Redirect to transactions after login
-    const redirectUrl = `${window.location.origin}/#/transactions`;
-    console.log('Google OAuth redirect URL:', redirectUrl);
+    // Redirect to dashboard after login
+    const redirectUrl = `${window.location.origin}/#/dashboard`;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -49,7 +48,7 @@ export const signUpWithEmail = async (email: string, password: string) => {
         email,
         password,
         options: {
-            emailRedirectTo: `${window.location.origin}/#/`
+            emailRedirectTo: `${window.location.origin}/#/dashboard`
         }
     });
     return { data, error };

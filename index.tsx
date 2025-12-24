@@ -20,22 +20,20 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
-        console.log('✅ Service Worker registered:', registration.scope);
-
         // Check for updates periodically
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('🔄 New version available! Refresh to update.');
+                // New version available - could trigger UI notification here
               }
             });
           }
         });
       })
-      .catch((error) => {
-        console.error('❌ Service Worker registration failed:', error);
+      .catch(() => {
+        // Service Worker registration failed silently
       });
   });
 }

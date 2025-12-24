@@ -65,11 +65,22 @@ const Landing: React.FC = () => {
             {/* NAVBAR */}
             <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
                 <div className="max-w-6xl mx-auto px-4 md:px-6 h-20 flex items-center gap-3">
-                    <div className="bg-gradient-to-tr from-purple-900/50 to-black p-1.5 rounded-lg border border-white/10">
-                        <ReynarLogo size={24} />
-                    </div>
-                    <span className="font-bold text-xl tracking-tight text-white hidden md:block">Reynar Wealth</span>
+                    <button
+                        onClick={() => document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                    >
+                        <div className="bg-gradient-to-tr from-purple-900/50 to-black p-1.5 rounded-lg border border-white/10">
+                            <ReynarLogo size={24} />
+                        </div>
+                        <span className="font-bold text-xl tracking-tight text-white hidden md:block">Reynar Wealth</span>
+                    </button>
                     <div className="ml-auto flex items-center gap-3 md:gap-4">
+                        <button
+                            onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                            className="text-sm font-medium text-zinc-400 hover:text-white transition-colors hidden md:block"
+                        >
+                            Preços
+                        </button>
                         <button
                             onClick={handleLogin}
                             className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
@@ -77,7 +88,7 @@ const Landing: React.FC = () => {
                             Entrar
                         </button>
                         <Button
-                            onClick={handleRegister}
+                            onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
                             className="!w-auto px-4 md:px-5 py-2 h-9 text-xs"
                         >
                             Começar Agora
@@ -87,7 +98,7 @@ const Landing: React.FC = () => {
             </nav>
 
             {/* HERO SECTION */}
-            <section className="pt-32 pb-12 md:pb-20 px-4 md:px-6 relative overflow-hidden">
+            <section id="hero" className="pt-32 pb-12 md:pb-20 px-4 md:px-6 relative overflow-hidden">
                 <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-purple-600/30 rounded-full blur-[100px] md:blur-[120px] pointer-events-none opacity-50"></div>
 
                 <div className="max-w-4xl mx-auto text-center relative z-10 mb-12">
@@ -114,9 +125,9 @@ const Landing: React.FC = () => {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-sm mx-auto sm:max-w-none">
                         <Button
                             className="!w-full sm:!w-auto px-8 py-4 text-base h-14 shadow-[0_0_30px_rgba(168,85,247,0.4)] bg-gradient-to-r from-purple-600 to-indigo-600 border-none hover:brightness-110"
-                            onClick={handleRegister}
+                            onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
                         >
-                            Criar Conta Grátis <ArrowRight size={18} className="ml-2" />
+                            Ver Planos <ArrowRight size={18} className="ml-2" />
                         </Button>
                         <button
                             onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
@@ -864,74 +875,95 @@ const Landing: React.FC = () => {
 
             {/* PRICING */}
             <section id="pricing" className="py-24 px-4 md:px-6 border-t border-white/5 bg-gradient-to-b from-black to-[#050505]">
-                <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
-                    <div className="flex-1 space-y-6 text-center md:text-left">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                            Um preço simples. <br />
-                            <span className="text-purple-500">Acesso ilimitado.</span>
+                <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
+                            Escolha seu <span className="text-purple-500">Plano</span>
                         </h2>
-                        <p className="text-zinc-400 text-lg">
-                            Sem taxas ocultas. Todas as ferramentas por um valor menor que um lanche.
+                        <p className="text-zinc-400 text-lg max-w-xl mx-auto">
+                            Sem taxas ocultas. Cancele quando quiser.
                         </p>
-                        <ul className="space-y-3 inline-block text-left pt-4">
-                            <li className="flex items-center gap-3 text-zinc-300"><ShieldCheck className="text-purple-500" size={20} /> 7 Dias de Garantia Incondicional</li>
-                            <li className="flex items-center gap-3 text-zinc-300"><Lock className="text-purple-500" size={20} /> Criptografia de Ponta</li>
-                            <li className="flex items-center gap-3 text-zinc-300"><Zap className="text-purple-500" size={20} /> Cancelamento em 1 clique</li>
-                        </ul>
                     </div>
 
-                    <div className="flex-1 w-full max-w-md">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                        {/* PLUS PLAN */}
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-b from-purple-600 via-indigo-600 to-purple-800 rounded-[30px] opacity-75 blur-md group-hover:opacity-100 transition duration-500"></div>
-                            <div className="relative bg-[#050505] rounded-[28px] p-8 md:p-10 border border-white/10 shadow-2xl">
-                                <div className="absolute -top-4 left-0 right-0 mx-auto w-fit bg-[#fbbf24] text-black text-xs font-extrabold px-4 py-1.5 rounded-full shadow-lg uppercase tracking-wide z-20">
-                                    7 Dias Grátis
+                            <div className="absolute -inset-0.5 bg-gradient-to-b from-purple-500/50 to-violet-600/50 rounded-[26px] opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                            <div className="relative bg-[#050505] rounded-[24px] p-6 md:p-8 border border-white/10 shadow-2xl h-full flex flex-col">
+                                <div className="text-center mb-6">
+                                    <div className="inline-flex items-center gap-2 bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full text-sm font-medium mb-4">
+                                        ⭐ Plus
+                                    </div>
+                                    <div className="flex items-baseline justify-center gap-1">
+                                        <span className="text-4xl font-bold text-white">14,90</span>
+                                        <span className="text-zinc-500">R$/mês</span>
+                                    </div>
+                                    <p className="text-xs text-zinc-500 mt-2">Ideal para uso pessoal</p>
                                 </div>
 
-                                <div className="text-center mb-8 pt-2">
-                                    <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2 mb-4">
-                                        Plano Reynar PRO
-                                    </h3>
-
-                                    <div className="flex items-center justify-center gap-3 mb-6 bg-white/5 p-1 rounded-xl w-fit mx-auto">
-                                        <button
-                                            onClick={() => setBillingCycle('monthly')}
-                                            className={`px-3 py-1 text-xs rounded-lg transition-all ${billingCycle === 'monthly' ? 'bg-purple-600 text-white shadow' : 'text-zinc-400 hover:text-white'}`}
-                                        >
-                                            Mensal
-                                        </button>
-                                        <button
-                                            onClick={() => setBillingCycle('yearly')}
-                                            className={`px-3 py-1 text-xs rounded-lg transition-all ${billingCycle === 'yearly' ? 'bg-purple-600 text-white shadow' : 'text-zinc-400 hover:text-white'}`}
-                                        >
-                                            Anual (-17%)
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-baseline justify-center gap-1">
-                                        <span className="text-5xl font-bold text-white tracking-tight">
-                                            {billingCycle === 'monthly' ? '29,90' : '299,00'}
-                                        </span>
-                                        <span className="text-lg text-textMuted">R$</span>
-                                    </div>
-                                    <p className="text-xs text-zinc-500 mt-2">
-                                        {billingCycle === 'monthly' ? 'Cobrado mensalmente' : 'Cobrado uma vez ao ano'}
-                                    </p>
+                                <div className="space-y-3 mb-6 flex-1 text-sm">
+                                    <div className="flex items-center gap-2 text-zinc-300"><CheckCircle size={14} className="text-purple-500" /> 200 importações/mês</div>
+                                    <div className="flex items-center gap-2 text-zinc-300"><CheckCircle size={14} className="text-purple-500" /> 50 scans OCR/mês</div>
+                                    <div className="flex items-center gap-2 text-zinc-300"><CheckCircle size={14} className="text-purple-500" /> 10 metas financeiras</div>
+                                    <div className="flex items-center gap-2 text-zinc-300"><CheckCircle size={14} className="text-purple-500" /> Categorização com IA</div>
+                                    <div className="flex items-center gap-2 text-zinc-300"><CheckCircle size={14} className="text-purple-500" /> Exportar Excel/PDF</div>
                                 </div>
 
                                 <Button
-                                    className="w-full h-14 text-base font-bold bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-lg shadow-purple-900/30 animate-pulse-slow border-none mb-6"
+                                    variant="secondary"
+                                    className="w-full h-12"
                                     onClick={handleRegister}
                                 >
-                                    Começar Agora <ArrowRight size={18} className="ml-2" />
+                                    Assinar Plus <ArrowRight size={16} />
                                 </Button>
-
-                                <div className="text-center">
-                                    <p className="text-[10px] text-zinc-600 flex items-center justify-center gap-1">
-                                        <Lock size={10} /> Pagamento processado com segurança pelo Stripe.
-                                    </p>
-                                </div>
                             </div>
+                        </div>
+
+                        {/* PRO PLAN */}
+                        <div className="relative group">
+                            <div className="absolute -top-4 left-0 right-0 mx-auto w-fit bg-amber-400 text-black text-xs font-extrabold px-4 py-1.5 rounded-full shadow-lg uppercase tracking-wide z-20">
+                                Mais Popular
+                            </div>
+                            <div className="absolute -inset-1 bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 rounded-[30px] opacity-75 group-hover:opacity-100 transition duration-500"></div>
+                            <div className="relative bg-[#050505] rounded-[28px] p-6 md:p-8 border border-amber-400/30 shadow-2xl h-full flex flex-col">
+                                <div className="text-center mb-6 pt-2">
+                                    <div className="inline-flex items-center gap-2 bg-amber-400/10 text-amber-400 px-3 py-1 rounded-full text-sm font-medium mb-4">
+                                        👑 Pro
+                                    </div>
+                                    <div className="flex items-baseline justify-center gap-1">
+                                        <span className="text-4xl font-bold text-white">29,90</span>
+                                        <span className="text-zinc-500">R$/mês</span>
+                                    </div>
+                                    <p className="text-xs text-zinc-500 mt-2">Para quem quer o máximo</p>
+                                </div>
+
+                                <div className="space-y-3 mb-6 flex-1 text-sm">
+                                    <div className="flex items-center gap-2 text-white font-medium"><CheckCircle size={14} className="text-amber-400" /> Importações ilimitadas</div>
+                                    <div className="flex items-center gap-2 text-white font-medium"><CheckCircle size={14} className="text-amber-400" /> Scans OCR ilimitados</div>
+                                    <div className="flex items-center gap-2 text-white font-medium"><CheckCircle size={14} className="text-amber-400" /> Metas ilimitadas</div>
+                                    <div className="flex items-center gap-2 text-zinc-300"><CheckCircle size={14} className="text-amber-400" /> Categorização com IA</div>
+                                    <div className="flex items-center gap-2 text-zinc-300"><CheckCircle size={14} className="text-amber-400" /> Relatórios históricos</div>
+                                    <div className="flex items-center gap-2 text-zinc-300"><CheckCircle size={14} className="text-amber-400" /> Multi-moedas</div>
+                                    <div className="flex items-center gap-2 text-zinc-300"><CheckCircle size={14} className="text-amber-400" /> Suporte prioritário</div>
+                                </div>
+
+                                <Button
+                                    className="w-full h-12 bg-amber-400 hover:bg-amber-500 text-black font-bold border-none shadow-lg shadow-amber-400/20"
+                                    onClick={handleRegister}
+                                >
+                                    Assinar Pro 👑
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="text-center mt-8 space-y-3">
+                        <p className="text-[10px] text-zinc-600 flex items-center justify-center gap-1">
+                            <Lock size={10} /> Pagamento processado com segurança pelo Stripe.
+                        </p>
+                        <div className="flex items-center justify-center gap-6 text-xs text-zinc-500">
+                            <span className="flex items-center gap-1"><ShieldCheck size={12} /> 7 dias de garantia</span>
+                            <span className="flex items-center gap-1"><Zap size={12} /> Cancele quando quiser</span>
                         </div>
                     </div>
                 </div>

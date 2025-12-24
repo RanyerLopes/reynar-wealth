@@ -13,7 +13,7 @@ import { isAdminUser } from '../services/supabase';
 // TYPES
 // ============================================================================
 
-export type PlanType = 'free' | 'pro' | 'trial';
+export type PlanType = 'free' | 'plus' | 'pro' | 'trial';
 
 export interface PlanLimits {
     // Transações
@@ -73,8 +73,10 @@ export interface SubscriptionContextType extends SubscriptionState {
 
     // Plan management
     upgradeToPro: () => void;
+    upgradeToPlus: () => void;
     startTrial: () => void;
     isPro: boolean;
+    isPlus: boolean;
     isFree: boolean;
     isTrial: boolean;
 
@@ -100,6 +102,20 @@ const FREE_LIMITS: PlanLimits = {
     exportData: false,
     multiCurrency: false,
     receiptStorage: false,
+    prioritySupport: false,
+};
+
+const PLUS_LIMITS: PlanLimits = {
+    monthlyImportedTransactions: 200,
+    monthlyOcrScans: 50,
+    maxGoals: 10,
+    maxBankAccounts: 3,
+    monthlyAiConsultations: 50,
+    aiCategorization: true,
+    historicalReports: false,
+    exportData: true,
+    multiCurrency: false,
+    receiptStorage: true,
     prioritySupport: false,
 };
 
@@ -173,7 +189,6 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         if (isAdmin && plan !== 'pro') {
             setPlan('pro');
             localStorage.setItem(STORAGE_KEYS.PLAN, 'pro');
-            console.log('🔑 Admin user detected - Pro access granted');
         }
     }, [isAdmin, plan]);
 
@@ -240,6 +255,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     const getCurrentLimits = (): PlanLimits => {
         if (plan === 'pro') return PRO_LIMITS;
         if (plan === 'trial' && !trialStatus.isExpired) return PRO_LIMITS;
+        if (plan === 'plus') return PLUS_LIMITS;
         return FREE_LIMITS;
     };
 
@@ -316,6 +332,12 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         // In production, this would be called after successful Stripe payment
     };
 
+    const upgradeToPlus = () => {
+        setPlan('plus');
+        localStorage.setItem(STORAGE_KEYS.PLAN, 'plus');
+        // In production, this would be called after successful Stripe payment
+    };
+
     const startTrial = () => {
         const now = new Date();
         setPlan('trial');
@@ -387,8 +409,10 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
         // Plan management
         upgradeToPro,
+        upgradeToPlus,
         startTrial,
         isPro: plan === 'pro',
+        isPlus: plan === 'plus',
         isFree: plan === 'free',
         isTrial: plan === 'trial' && !trialStatus.isExpired,
 
