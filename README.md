@@ -178,7 +178,7 @@ Acesse: http://localhost:3000
 
 ## 📄 Licença
 
-Este projeto é privado. © 2024 Reynar Wealth
+Este projeto é privado. © 2025 Reynar Wealth
 
 ---
 
