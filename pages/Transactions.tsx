@@ -4,9 +4,11 @@ import { Plus, X, Upload, FileText, ChevronLeft, ChevronRight, PieChart as PieIc
 import { Button, Input, Badge } from '../components/UI';
 import { Transaction, TransactionType } from '../types';
 import { format, addMonths, isSameMonth } from 'date-fns';
+import { ptBR, enUS, es } from 'date-fns/locale';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { useGamification } from '../context/GamificationContext';
 import { useSubscription } from '../context/SubscriptionContext';
+import { useLanguage } from '../context/LanguageContext';
 import { CameraModal } from '../components/CameraModal';
 import { AIConsultant } from '../components/AIConsultant';
 import { UpgradeModal } from '../components/UpgradeModal';
@@ -54,7 +56,11 @@ const Transactions: React.FC = () => {
         isPro,
         isTrial
     } = useSubscription();
+    const { language, formatCurrency } = useLanguage();
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Get date-fns locale based on language
+    const dateLocale = language === 'en-US' ? enUS : language === 'es-ES' ? es : ptBR;
 
     // Upgrade Modal State
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -479,7 +485,7 @@ const Transactions: React.FC = () => {
 
                 <div className="flex items-center gap-4 bg-surface border border-surfaceHighlight p-1 rounded-xl">
                     <button onClick={handlePrevMonth} className="p-2 hover:text-white text-textMuted"><ChevronLeft size={20} /></button>
-                    <span className="font-semibold w-32 text-center capitalize">{format(currentDate, 'MMMM yyyy')}</span>
+                    <span className="font-semibold w-32 text-center capitalize">{format(currentDate, 'MMMM yyyy', { locale: dateLocale })}</span>
                     <button onClick={handleNextMonth} className="p-2 hover:text-white text-textMuted"><ChevronRight size={20} /></button>
                 </div>
 

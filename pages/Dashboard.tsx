@@ -6,13 +6,14 @@ import { Card, Badge, triggerCoinExplosion } from '../components/UI';
 import { NOBILITY_TITLES } from '../services/mockData';
 import { useGamification } from '../context/GamificationContext';
 import { format, isPast, isToday, addDays, startOfMonth, endOfMonth, subMonths, getMonth } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR, enUS, es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 import { AIConsultant } from '../components/AIConsultant';
 import { Onboarding, useOnboarding } from '../components/Onboarding';
 import { useAuth } from '../context/AuthContext';
 import { useTransactions, useBills, useInvestments } from '../hooks/useDatabase';
+import { useLanguage } from '../context/LanguageContext';
 
 // Brighter, Neon Pastel Colors for High Contrast & Modern Look
 const COLORS = ['#c084fc', '#34d399', '#facc15', '#f87171', '#60a5fa'];
@@ -27,6 +28,8 @@ const Dashboard: React.FC = () => {
     const { transactions } = useTransactions();
     const { bills } = useBills();
     const { investments } = useInvestments();
+    // i18n hook
+    const { t, formatCurrency: formatCurrencyI18n, language } = useLanguage();
 
     // Onboarding for new users
     const { showOnboarding, completeOnboarding } = useOnboarding();
@@ -141,8 +144,12 @@ const Dashboard: React.FC = () => {
 
     const togglePrivacy = () => setIsPrivacyMode(!isPrivacyMode);
 
+    // Get date-fns locale based on language
+    const dateLocale = language === 'en-US' ? enUS : language === 'es-ES' ? es : ptBR;
+
+    // Privacy-aware currency formatter
     const formatCurrency = (val: number) => {
-        return isPrivacyMode ? 'R$ •••••' : `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        return isPrivacyMode ? '•••••' : formatCurrencyI18n(val);
     };
 
 
@@ -172,10 +179,10 @@ const Dashboard: React.FC = () => {
                 {/* Header */}
                 <header className="flex justify-between items-center">
                     <div>
-                        <h2 className="text-2xl font-bold text-textMain tracking-tight">Olá, {userName.split(' ')[0]}</h2>
+                        <h2 className="text-2xl font-bold text-textMain tracking-tight">{t('dashboard.greeting', { name: userName.split(' ')[0] })}</h2>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs text-textMuted capitalize">
-                                {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
+                                {format(new Date(), "EEEE, d MMMM", { locale: dateLocale })}
                             </span>
                         </div>
                     </div>
@@ -232,9 +239,9 @@ const Dashboard: React.FC = () => {
                             <div className="p-6 border-b border-surfaceHighlight flex justify-between items-center bg-gradient-to-r from-indigo-900/20 to-purple-900/20 rounded-t-2xl">
                                 <div>
                                     <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                        <Trophy size={20} className="text-amber-400" /> Sala do Trono
+                                        <Trophy size={20} className="text-amber-400" /> {t('dashboard.throneRoom')}
                                     </h3>
-                                    <p className="text-xs text-textMuted">Suas conquistas e progresso no reino.</p>
+                                    <p className="text-xs text-textMuted">{t('dashboard.achievementsProgress')}</p>
                                 </div>
                                 <button onClick={() => setIsGamificationModalOpen(false)} className="text-textMuted hover:text-white bg-black/20 rounded-full p-1"><X size={20} /></button>
                             </div>
@@ -250,7 +257,7 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
                                     <h2 className="text-2xl font-bold text-white">{currentTitle.title}</h2>
-                                    <p className="text-sm text-textMuted mb-4">Você está a {nextLevelXp - currentXp} XP do próximo título.</p>
+                                    <p className="text-sm text-textMuted mb-4">{t('dashboard.xpToNextLevel', { xp: nextLevelXp - currentXp })}</p>
 
                                     <div className="w-full max-w-md mx-auto bg-surfaceHighlight rounded-full h-4 overflow-hidden relative border border-white/5">
                                         <div
@@ -266,23 +273,23 @@ const Dashboard: React.FC = () => {
                                 {/* How to Earn XP */}
                                 <div className="bg-surfaceHighlight/30 border border-surfaceHighlight rounded-xl p-4">
                                     <h4 className="font-bold text-white mb-3 flex items-center gap-2">
-                                        <Zap size={16} className="text-yellow-400" /> Como ganhar XP?
+                                        <Zap size={16} className="text-yellow-400" /> {t('dashboard.howToEarnXP')}
                                     </h4>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div className="flex justify-between text-sm p-2 bg-surface rounded-lg">
-                                            <span className="text-textMuted">Registrar Transação</span>
+                                            <span className="text-textMuted">{t('dashboard.registerTransaction')}</span>
                                             <span className="text-secondary font-bold">+15 XP</span>
                                         </div>
                                         <div className="flex justify-between text-sm p-2 bg-surface rounded-lg">
-                                            <span className="text-textMuted">Adicionar Meta</span>
+                                            <span className="text-textMuted">{t('dashboard.addGoal')}</span>
                                             <span className="text-secondary font-bold">+20 XP</span>
                                         </div>
                                         <div className="flex justify-between text-sm p-2 bg-surface rounded-lg">
-                                            <span className="text-textMuted">Pagar Conta em Dia</span>
+                                            <span className="text-textMuted">{t('dashboard.payBillOnTime')}</span>
                                             <span className="text-secondary font-bold">+50 XP</span>
                                         </div>
                                         <div className="flex justify-between text-sm p-2 bg-surface rounded-lg">
-                                            <span className="text-textMuted">Novo Investimento</span>
+                                            <span className="text-textMuted">{t('dashboard.newInvestment')}</span>
                                             <span className="text-secondary font-bold">+30 XP</span>
                                         </div>
                                     </div>
@@ -291,7 +298,7 @@ const Dashboard: React.FC = () => {
                                 {/* Achievements Grid */}
                                 <div>
                                     <h4 className="font-bold text-white mb-4 flex items-center gap-2">
-                                        <Star size={16} className="text-purple-400" /> Galeria de Medalhas
+                                        <Star size={16} className="text-purple-400" /> {t('dashboard.medalGallery')}
                                     </h4>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                         {achievements.map((ach) => (
@@ -351,8 +358,8 @@ const Dashboard: React.FC = () => {
                                 <AlertTriangle size={20} />
                             </div>
                             <div>
-                                <h4 className="text-white font-semibold text-sm">Contas Vencendo</h4>
-                                <p className="text-danger/80 text-xs mt-0.5">Você tem {urgentBills.length} conta(s) precisando de atenção.</p>
+                                <h4 className="text-white font-semibold text-sm">{t('dashboard.billsDue')}</h4>
+                                <p className="text-danger/80 text-xs mt-0.5">{t('dashboard.billsNeedAttention', { count: urgentBills.length })}</p>
                             </div>
                         </div>
                         <ChevronRight className="text-danger/50" size={20} />
@@ -369,7 +376,7 @@ const Dashboard: React.FC = () => {
                                     <ArrowUpRight size={22} />
                                 </div>
                             </div>
-                            <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">Entradas</p>
+                            <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">{t('dashboard.income')}</p>
                             <h3 className="text-2xl font-bold text-white mt-1 tracking-tight">{formatCurrency(totalIncome)}</h3>
                         </Card>
                     </div>
@@ -381,15 +388,15 @@ const Dashboard: React.FC = () => {
                                 <div className="p-2.5 bg-danger/10 rounded-xl text-danger border border-danger/20">
                                     <ArrowDownRight size={22} />
                                 </div>
-                                {isOverBudget && <Badge type="expense">Acima da Meta</Badge>}
+                                {isOverBudget && <Badge type="expense">{t('dashboard.aboveTarget')}</Badge>}
                             </div>
-                            <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">Saídas</p>
+                            <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">{t('dashboard.expenses')}</p>
                             <h3 className="text-2xl font-bold text-white mt-1 tracking-tight">{formatCurrency(totalExpenses)}</h3>
 
                             {/* Mini Budget Bar - Replaces the huge widget */}
                             <div className="mt-3">
                                 <div className="flex justify-between text-[10px] text-textMuted mb-1">
-                                    <span>Meta de Gastos</span>
+                                    <span>{t('dashboard.spendingGoal')}</span>
                                     <span>{Math.min(currentExpensePercent, 100).toFixed(0)}%</span>
                                 </div>
                                 <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
@@ -409,9 +416,9 @@ const Dashboard: React.FC = () => {
                                 <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-500 border border-blue-500/20">
                                     <TrendingUp size={22} />
                                 </div>
-                                <Badge type="neutral">Investido</Badge>
+                                <Badge type="neutral">{t('dashboard.invested')}</Badge>
                             </div>
-                            <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">Patrimônio</p>
+                            <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">{t('dashboard.patrimony')}</p>
                             <h3 className="text-2xl font-bold text-white mt-1 tracking-tight">{formatCurrency(totalPatrimony)}</h3>
                         </Card>
                     </div>
@@ -420,11 +427,11 @@ const Dashboard: React.FC = () => {
                     <div className="snap-center shrink-0 w-[85%] md:hidden">
                         <Card className="h-full bg-surfaceHighlight/50">
                             <div className="flex flex-col items-center justify-center h-full text-center py-4">
-                                <p className="text-textMuted text-xs uppercase tracking-wider font-semibold mb-2">Saldo em Conta</p>
+                                <p className="text-textMuted text-xs uppercase tracking-wider font-semibold mb-2">{t('dashboard.balance')}</p>
                                 <h3 className={`text-2xl font-bold tracking-tight ${remainingBalance >= 0 ? 'text-secondary' : 'text-danger'}`}>
                                     {formatCurrency(remainingBalance)}
                                 </h3>
-                                <p className="text-[10px] text-textMuted mt-2">Previsto até fim do mês</p>
+                                <p className="text-[10px] text-textMuted mt-2">{t('dashboard.forecastEndMonth')}</p>
                             </div>
                         </Card>
                     </div>
@@ -434,7 +441,7 @@ const Dashboard: React.FC = () => {
                     {/* Main Flow Chart - TOGGLEABLE */}
                     <Card className="lg:col-span-2 min-h-[300px] flex flex-col">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-semibold text-textMain">Fluxo de Caixa</h3>
+                            <h3 className="font-semibold text-textMain">{t('dashboard.cashFlow')}</h3>
                             <div className="flex items-center gap-4">
                                 <div className="flex gap-2 bg-surfaceHighlight/50 p-1 rounded-lg">
                                     <button
@@ -457,7 +464,7 @@ const Dashboard: React.FC = () => {
                         <div className="flex-1 w-full min-h-[250px] relative">
                             {isPrivacyMode && (
                                 <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/10 flex items-center justify-center">
-                                    <span className="flex items-center gap-2 bg-surfaceHighlight px-4 py-2 rounded-full text-sm text-textMuted border border-white/10 shadow-xl"><EyeOff size={16} /> Oculto</span>
+                                    <span className="flex items-center gap-2 bg-surfaceHighlight px-4 py-2 rounded-full text-sm text-textMuted border border-white/10 shadow-xl"><EyeOff size={16} /> {t('dashboard.hidden')}</span>
                                 </div>
                             )}
                             <ResponsiveContainer width="100%" height="100%">
@@ -515,7 +522,7 @@ const Dashboard: React.FC = () => {
 
                     {/* Expenses Donut */}
                     <Card className="min-h-[300px] flex flex-col">
-                        <h3 className="font-semibold text-textMain mb-2">Para onde foi o dinheiro?</h3>
+                        <h3 className="font-semibold text-textMain mb-2">{t('dashboard.whereDidMoneyGo')}</h3>
                         <div className="flex-1 w-full relative">
                             {isPrivacyMode && (
                                 <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/10 flex items-center justify-center">
@@ -525,7 +532,7 @@ const Dashboard: React.FC = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={expenseByCategory.length > 0 ? expenseByCategory : [{ name: 'Sem dados', value: 1 }]}
+                                        data={expenseByCategory.length > 0 ? expenseByCategory : [{ name: t('dashboard.noData'), value: 1 }]}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={65}
@@ -535,7 +542,7 @@ const Dashboard: React.FC = () => {
                                         stroke="none"
                                         cornerRadius={6}
                                     >
-                                        {(expenseByCategory.length > 0 ? expenseByCategory : [{ name: 'Sem dados', value: 1 }]).map((entry, index) => (
+                                        {(expenseByCategory.length > 0 ? expenseByCategory : [{ name: t('dashboard.noData'), value: 1 }]).map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
@@ -545,7 +552,7 @@ const Dashboard: React.FC = () => {
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
                                 <span className="text-2xl font-bold text-white tracking-tight">{isPrivacyMode ? '••••' : formatCurrency(totalExpensesByCategory)}</span>
-                                <span className="text-[10px] text-textMuted uppercase tracking-widest">Total</span>
+                                <span className="text-[10px] text-textMuted uppercase tracking-widest">{t('dashboard.total')}</span>
                             </div>
                         </div>
                     </Card>
@@ -554,29 +561,29 @@ const Dashboard: React.FC = () => {
                 {/* Recent Transactions List */}
                 <div className="space-y-4">
                     <div className="flex justify-between items-end">
-                        <h3 className="text-lg font-semibold text-textMain">Últimas Transações</h3>
-                        <button className="text-sm text-primary hover:text-white transition-colors" onClick={() => navigate(AppRoutes.TRANSACTIONS)}>Ver Extrato</button>
+                        <h3 className="text-lg font-semibold text-textMain">{t('dashboard.recentTransactions')}</h3>
+                        <button className="text-sm text-primary hover:text-white transition-colors" onClick={() => navigate(AppRoutes.TRANSACTIONS)}>{t('dashboard.viewStatement')}</button>
                     </div>
                     <div className="space-y-3">
-                        {transactions.slice(0, 5).map((t) => (
-                            <div key={t.id} className="flex items-center justify-between p-4 bg-surface border border-surfaceHighlight rounded-xl hover:bg-surfaceHighlight transition-colors active:scale-[0.99]">
+                        {transactions.slice(0, 5).map((tx) => (
+                            <div key={tx.id} className="flex items-center justify-between p-4 bg-surface border border-surfaceHighlight rounded-xl hover:bg-surfaceHighlight transition-colors active:scale-[0.99]">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-secondary/10 text-secondary' : 'bg-surfaceHighlight text-textMuted'}`}>
-                                        {t.type === 'income' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'income' ? 'bg-secondary/10 text-secondary' : 'bg-surfaceHighlight text-textMuted'}`}>
+                                        {tx.type === 'income' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
                                     </div>
                                     <div>
-                                        <p className="font-medium text-textMain text-sm md:text-base">{t.description}</p>
-                                        <p className="text-xs text-textMuted">{t.category} • {format(t.date, 'd MMM')}</p>
+                                        <p className="font-medium text-textMain text-sm md:text-base">{tx.description}</p>
+                                        <p className="text-xs text-textMuted">{tx.category} • {format(tx.date, 'd MMM', { locale: dateLocale })}</p>
                                     </div>
                                 </div>
-                                <span className={`font-semibold text-sm md:text-base ${t.type === 'income' ? 'text-secondary' : 'text-textMain'}`}>
-                                    {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
+                                <span className={`font-semibold text-sm md:text-base ${tx.type === 'income' ? 'text-secondary' : 'text-textMain'}`}>
+                                    {tx.type === 'income' ? '+' : '-'} {formatCurrency(tx.amount)}
                                 </span>
                             </div>
                         ))}
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 };
