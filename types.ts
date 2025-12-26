@@ -21,6 +21,8 @@ export interface Investment {
   id: string;
   assetName: string;
   type: 'Ações' | 'Cripto' | 'Renda Fixa' | 'FIIs' | 'Outros';
+  quantity?: number; // Number of shares/coins/units
+  purchasePrice?: number; // Price per unit at purchase
   amountInvested: number;
   currentValue: number;
   performance: number; // percentage

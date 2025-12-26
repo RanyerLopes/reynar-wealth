@@ -193,10 +193,10 @@ const Login: React.FC = () => {
           <Button
             onClick={handleGoogleLogin}
             isLoading={googleLoading}
-            className="w-full py-4 text-base bg-white hover:bg-gray-100 text-gray-900 shadow-lg transition-all active:scale-[0.98] !from-white !to-gray-100"
+            className="w-full py-4 text-base bg-white hover:bg-gray-100 text-gray-900 hover:text-gray-900 shadow-lg transition-all active:scale-[0.98] !from-white !to-gray-100 [&>svg]:fill-current"
           >
             <GoogleIcon />
-            Entrar com Google
+            <span className="text-gray-900">Entrar com Google</span>
           </Button>
 
           {/* Clear Session Button (for debugging) */}

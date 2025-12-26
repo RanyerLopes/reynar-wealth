@@ -6,8 +6,10 @@ import { Card, Button, Input } from '../components/UI';
 import { Loan } from '../types';
 import { format } from 'date-fns';
 import { useLoans } from '../hooks/useDatabase';
+import { useLanguage } from '../context/LanguageContext';
 
 const Loans: React.FC = () => {
+    const { t, formatCurrency } = useLanguage();
     const { loans: dbLoans, loading: loansLoading, addLoan: addLoanToDb, toggleLoanPaid } = useLoans();
     const [loans, setLoans] = useState<Loan[]>([]);
 
@@ -33,7 +35,7 @@ const Loans: React.FC = () => {
     };
 
     const handleDelete = (id: string) => {
-        if (confirm('Tem certeza que deseja apagar este registro?')) {
+        if (confirm(t('loans.deleteConfirm'))) {
             setLoans(loans.filter(l => l.id !== id));
         }
     };
@@ -67,15 +69,15 @@ const Loans: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
                 <div className="text-right mr-2">
-                    <p className={`font-bold ${loan.isPaid ? 'text-textMuted' : 'text-white'}`}>R$ {loan.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <p className="text-[10px] text-textMuted">{loan.isPaid ? 'Recebido' : 'A receber'}</p>
+                    <p className={`font-bold ${loan.isPaid ? 'text-textMuted' : 'text-white'}`}>{formatCurrency(loan.amount)}</p>
+                    <p className="text-[10px] text-textMuted">{loan.isPaid ? t('loans.paid') : t('loans.pending')}</p>
                 </div>
 
                 {!loan.isPaid ? (
                     <button
                         onClick={() => handleTogglePaid(loan.id)}
                         className="p-2 rounded-lg bg-surfaceHighlight hover:bg-secondary/20 hover:text-secondary text-textMuted transition-colors"
-                        title="Marcar como Pago"
+                        title={t('loans.markAsPaid')}
                     >
                         <CheckCircle size={18} />
                     </button>
@@ -96,12 +98,12 @@ const Loans: React.FC = () => {
         <div className="space-y-6 animate-fade-in relative">
             <header className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-textMain">Me Devem</h2>
-                    <p className="text-textMuted text-sm">Controle quem te deve dinheiro</p>
+                    <h2 className="text-2xl font-bold text-textMain">{t('loans.title')}</h2>
+                    <p className="text-textMuted text-sm">{t('loans.subtitle')}</p>
                 </div>
                 <Button className="!w-auto px-4 py-2" onClick={() => setIsModalOpen(true)}>
                     <Plus size={20} />
-                    <span className="hidden sm:inline">Novo Empréstimo</span>
+                    <span className="hidden sm:inline">{t('loans.newLoan')}</span>
                 </Button>
             </header>
 
@@ -111,9 +113,9 @@ const Loans: React.FC = () => {
                     <HandCoins size={100} className="text-primary" />
                 </div>
                 <div className="relative z-10">
-                    <p className="text-primary/80 text-xs font-medium uppercase tracking-wider mb-1">Total a Receber</p>
-                    <h3 className="text-3xl font-bold text-white mb-2">R$ {totalReceivable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-                    <p className="text-textMuted text-xs">Não deixe seu dinheiro parado. Cobre seus amigos!</p>
+                    <p className="text-primary/80 text-xs font-medium uppercase tracking-wider mb-1">{t('loans.totalOwed')}</p>
+                    <h3 className="text-3xl font-bold text-white mb-2">{formatCurrency(totalReceivable)}</h3>
+                    <p className="text-textMuted text-xs">{t('loans.noLoansDesc')}</p>
                 </div>
             </Card>
 
@@ -123,13 +125,13 @@ const Loans: React.FC = () => {
                     onClick={() => setActiveTab('active')}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'active' ? 'bg-surface shadow-sm text-textMain' : 'text-textMuted hover:text-white'}`}
                 >
-                    A Receber ({activeLoans.length})
+                    {t('loans.pending')} ({activeLoans.length})
                 </button>
                 <button
                     onClick={() => setActiveTab('paid')}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'paid' ? 'bg-surface shadow-sm text-textMain' : 'text-textMuted hover:text-white'}`}
                 >
-                    Já Pagaram
+                    {t('loans.paid')}
                 </button>
             </div>
 
@@ -140,7 +142,7 @@ const Loans: React.FC = () => {
                         {activeLoans.length === 0 ? (
                             <div className="text-center py-20 text-textMuted bg-surface/30 rounded-2xl border border-dashed border-surfaceHighlight">
                                 <HandCoins size={48} className="mx-auto mb-4 opacity-20" />
-                                <p>Ninguém te deve nada. <br />Que sorte (ou azar)!</p>
+                                <p>{t('loans.noLoans')}</p>
                             </div>
                         ) : (
                             activeLoans.map(l => <LoanItem key={l.id} loan={l} />)
@@ -164,12 +166,12 @@ const Loans: React.FC = () => {
                 <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
                     <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
                         <div className="p-6 border-b border-surfaceHighlight flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-white">Adicionar Dívida</h3>
+                            <h3 className="text-lg font-bold text-white">{t('loans.newLoan')}</h3>
                             <button onClick={() => setIsModalOpen(false)} className="text-textMuted hover:text-white"><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <Input
-                                label="Quem deve? (Nome)"
+                                label={t('loans.personName')}
                                 placeholder="Ex: Carlos"
                                 required
                                 icon={<User size={16} />}
@@ -177,22 +179,23 @@ const Loans: React.FC = () => {
                                 onChange={e => setName(e.target.value)}
                             />
                             <Input
-                                label="Valor (R$)"
+                                label={t('loans.loanAmount')}
                                 type="number"
                                 placeholder="0,00"
                                 required
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
+                                isCurrency
                             />
                             <Input
-                                label="Motivo / Descrição"
+                                label={t('loans.notes')}
                                 placeholder="Ex: Empréstimo Uber"
                                 required
                                 value={desc}
                                 onChange={e => setDesc(e.target.value)}
                             />
                             <Input
-                                label="Data do Empréstimo"
+                                label={t('loans.dueDate')}
                                 type="date"
                                 required
                                 icon={<Calendar size={16} />}
@@ -200,7 +203,7 @@ const Loans: React.FC = () => {
                                 onChange={e => setDate(e.target.value)}
                             />
 
-                            <Button type="submit" className="mt-4">Salvar</Button>
+                            <Button type="submit" className="mt-4">{t('loans.createLoan')}</Button>
                         </form>
                     </div>
                 </div>

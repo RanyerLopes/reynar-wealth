@@ -7,9 +7,11 @@ import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 import { useTransactions, useInvestments, useBills, useGoals } from '../hooks/useDatabase';
 import * as exportService from '../services/exportService';
+import { useLanguage } from '../context/LanguageContext';
 
 const Reports: React.FC = () => {
     const navigate = useNavigate();
+    const { t, formatCurrency } = useLanguage();
     const [activeTab, setActiveTab] = useState<'tax' | 'archive' | 'export'>('tax');
     const [selectedYear, setSelectedYear] = useState('2024');
     const [isExporting, setIsExporting] = useState(false);
@@ -159,9 +161,9 @@ const Reports: React.FC = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-textMain flex items-center gap-2">
                         <FileText className="text-primary" />
-                        Relatórios & Documentos
+                        {t('reports.title')}
                     </h2>
-                    <p className="text-textMuted text-sm">Centralize sua vida fiscal</p>
+                    <p className="text-textMuted text-sm">{t('reports.subtitle')}</p>
                 </div>
 
                 <div className="flex gap-2 bg-surface border border-surfaceHighlight p-1 rounded-xl">
@@ -210,10 +212,10 @@ const Reports: React.FC = () => {
                             </div>
                             <div className="flex gap-3">
                                 <Button onClick={handleExport} isLoading={isExporting} disabled={isLocked}>
-                                    <Download size={18} /> Baixar CSV
+                                    <Download size={18} /> {t('reports.download')}
                                 </Button>
                                 <Button variant="secondary" onClick={handleEmail} disabled={isLocked}>
-                                    <Share2 size={18} /> Enviar
+                                    <Share2 size={18} /> {t('reports.share')}
                                 </Button>
                             </div>
                         </Card>
@@ -223,15 +225,15 @@ const Reports: React.FC = () => {
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center border-b border-surfaceHighlight pb-2">
                                     <span className="text-textMuted text-sm">Rendimentos Tributáveis</span>
-                                    <span className="font-mono text-secondary font-medium">R$ {totalIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                    <span className="font-mono text-secondary font-medium">{formatCurrency(totalIncome)}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-surfaceHighlight pb-2">
                                     <span className="text-textMuted text-sm">Despesas Dedutíveis</span>
-                                    <span className="font-mono text-danger font-medium">- R$ {totalDeductible.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                    <span className="font-mono text-danger font-medium">- {formatCurrency(totalDeductible)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-textMuted text-sm">Bens e Direitos</span>
-                                    <span className="font-mono text-white font-medium">R$ {totalInvested.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                    <span className="font-mono text-white font-medium">{formatCurrency(totalInvested)}</span>
                                 </div>
                             </div>
                         </Card>
@@ -265,7 +267,7 @@ const Reports: React.FC = () => {
                                                         {t.category}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-right font-mono text-textMain">R$ {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                                <td className="px-6 py-4 text-right font-mono text-textMain">{formatCurrency(t.amount)}</td>
                                             </tr>
                                         ))
                                     ) : (
@@ -290,7 +292,7 @@ const Reports: React.FC = () => {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-textMuted text-xs">Custo de Aquisição</p>
-                                        <p className="font-mono text-white">R$ {inv.amountInvested.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                                        <p className="font-mono text-white">{formatCurrency(inv.amountInvested)}</p>
                                     </div>
                                 </div>
                             ))}

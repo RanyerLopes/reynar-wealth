@@ -120,6 +120,8 @@ export const getInvestments = async (userId: string): Promise<Investment[]> => {
         id: i.id,
         assetName: i.asset_name,
         type: i.type,
+        quantity: i.quantity,
+        purchasePrice: i.purchase_price,
         amountInvested: i.amount_invested,
         currentValue: i.current_value,
         performance: i.performance
@@ -133,6 +135,8 @@ export const addInvestment = async (userId: string, investment: Omit<Investment,
             user_id: userId,
             asset_name: investment.assetName,
             type: investment.type,
+            quantity: investment.quantity,
+            purchase_price: investment.purchasePrice,
             amount_invested: investment.amountInvested,
             current_value: investment.currentValue,
             performance: investment.performance
@@ -141,18 +145,38 @@ export const addInvestment = async (userId: string, investment: Omit<Investment,
         .single();
 
     if (error) throw error;
-    return { ...data, assetName: data.asset_name, amountInvested: data.amount_invested, currentValue: data.current_value };
+    return {
+        ...data,
+        assetName: data.asset_name,
+        quantity: data.quantity,
+        purchasePrice: data.purchase_price,
+        amountInvested: data.amount_invested,
+        currentValue: data.current_value
+    };
 };
 
 export const updateInvestment = async (id: string, updates: Partial<Investment>) => {
     const dbUpdates: any = {};
     if (updates.currentValue !== undefined) dbUpdates.current_value = updates.currentValue;
     if (updates.performance !== undefined) dbUpdates.performance = updates.performance;
+    if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+    if (updates.amountInvested !== undefined) dbUpdates.amount_invested = updates.amountInvested;
+    if (updates.purchasePrice !== undefined) dbUpdates.purchase_price = updates.purchasePrice;
 
     const { error } = await supabase
         .from('investments')
         .update(dbUpdates)
         .eq('id', id);
+
+    if (error) throw error;
+};
+
+export const deleteInvestment = async (id: string, userId: string) => {
+    const { error } = await supabase
+        .from('investments')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
 
     if (error) throw error;
 };

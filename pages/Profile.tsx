@@ -1,16 +1,16 @@
 
 import React, { useState, useRef } from 'react';
-import { User, Mail, Camera, Lock, Save, Shield, CheckCircle, Crown, CreditCard, Sparkles, Receipt, Plus, Trash2, X, Globe } from 'lucide-react';
+import { User, Mail, Camera, Lock, Save, Shield, CheckCircle, Crown, CreditCard, Sparkles, Receipt, Plus, Trash2, X, Globe, Banknote } from 'lucide-react';
 import { Card, Button, Input, triggerCoinExplosion } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage, SupportedLanguage } from '../context/LanguageContext';
+import { useLanguage, SupportedLanguage, SupportedCurrency } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 
 const Profile: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { language, setLanguage, languages, t } = useLanguage();
+    const { language, setLanguage, languages, currency, setCurrency, currencies, currentCurrency, t, formatCurrency, syncPreferencesToDb } = useLanguage();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // User data state
@@ -53,11 +53,16 @@ const Profile: React.FC = () => {
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         localStorage.setItem('reynar_user_name', name);
         localStorage.setItem('reynar_user_nickname', nickname);
         localStorage.setItem('reynar_user_gender', gender);
         localStorage.setItem('reynar_fixed_expenses', JSON.stringify(fixedExpenses));
+
+        // Sync language and currency preferences to Supabase
+        if (user?.id) {
+            await syncPreferencesToDb(user.id);
+        }
 
         triggerCoinExplosion(window.innerWidth / 2, window.innerHeight / 2);
         setShowSuccess(true);
@@ -197,9 +202,9 @@ const Profile: React.FC = () => {
                         <Globe size={20} className="text-blue-400" /> {t('profile.language')}
                     </h3>
                     <p className="text-xs text-textMuted mb-4">
-                        Escolha o idioma da interface e formato de moeda/data.
+                        Escolha o idioma da interface.
                     </p>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                         {(Object.entries(languages) as [SupportedLanguage, typeof languages['pt-BR']][]).map(([code, config]) => (
                             <button
                                 key={code}
@@ -218,9 +223,41 @@ const Profile: React.FC = () => {
                             </button>
                         ))}
                     </div>
+                </Card>
+
+                {/* Currency Settings Card */}
+                <Card>
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <Banknote size={20} className="text-green-400" /> {t('profile.currency')}
+                    </h3>
+                    <p className="text-xs text-textMuted mb-4">
+                        Escolha a moeda para exibição dos valores.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                        {(Object.entries(currencies) as [SupportedCurrency, typeof currencies['BRL']][]).map(([code, config]) => (
+                            <button
+                                key={code}
+                                type="button"
+                                onClick={() => setCurrency(code)}
+                                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${currency === code
+                                    ? 'bg-green-500/20 border-green-500 text-white'
+                                    : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-green-500/50'
+                                    }`}
+                            >
+                                <span className="text-2xl">{config.flag}</span>
+                                <div className="text-center">
+                                    <span className="text-xs font-medium block">{config.symbol} {config.code}</span>
+                                    <span className="text-[10px] text-textMuted">{config.name}</span>
+                                </div>
+                                {currency === code && (
+                                    <CheckCircle size={14} className="text-green-400" />
+                                )}
+                            </button>
+                        ))}
+                    </div>
                     <div className="mt-4 p-3 bg-surfaceHighlight rounded-xl text-xs text-textMuted">
                         <p>
-                            <strong className="text-white">{t('profile.currency')}:</strong> {languages[language].currency.symbol} ({languages[language].currency.code})
+                            <strong className="text-white">Exemplo:</strong> {formatCurrency(1234.56)}
                         </p>
                     </div>
                 </Card>
@@ -313,7 +350,7 @@ const Profile: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <span className="text-danger font-semibold">
-                                            R$ {expense.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                            {formatCurrency(expense.amount)}
                                         </span>
                                         <button
                                             onClick={() => handleRemoveFixedExpense(expense.id)}
@@ -327,7 +364,7 @@ const Profile: React.FC = () => {
                             <div className="flex justify-between items-center pt-3 border-t border-surfaceHighlight">
                                 <span className="text-sm text-textMuted">Total Mensal:</span>
                                 <span className="text-lg font-bold text-danger">
-                                    R$ {totalFixed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    {formatCurrency(totalFixed)}
                                 </span>
                             </div>
                         </div>

@@ -56,7 +56,7 @@ const Transactions: React.FC = () => {
         isPro,
         isTrial
     } = useSubscription();
-    const { language, formatCurrency } = useLanguage();
+    const { language, formatCurrency, t } = useLanguage();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Get date-fns locale based on language
@@ -424,7 +424,7 @@ const Transactions: React.FC = () => {
             return (
                 <div className="bg-white p-3 rounded-lg shadow-xl border border-zinc-200">
                     <p className="text-zinc-900 font-bold text-sm">
-                        {payload[0].name}: R$ {payload[0].value.toLocaleString('pt-BR')}
+                        {payload[0].name}: {formatCurrency(payload[0].value)}
                     </p>
                 </div>
             );
@@ -477,8 +477,8 @@ const Transactions: React.FC = () => {
             {/* Header and Month Selector */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-textMain">Extrato</h2>
-                    <p className="text-textMuted text-sm">Gerencie todas as suas movimentações</p>
+                    <h2 className="text-2xl font-bold text-textMain">{t('transactions.title')}</h2>
+                    <p className="text-textMuted text-sm">{t('transactions.subtitle')}</p>
                 </div>
 
                 <div className="flex items-center gap-4 bg-surface border border-surfaceHighlight p-1 rounded-xl">
@@ -490,20 +490,20 @@ const Transactions: React.FC = () => {
                 <div className="flex flex-wrap gap-2 w-full md:w-auto">
                     <Button variant="secondary" className="!w-auto px-4 py-2 bg-surface hover:bg-surfaceHighlight border border-surfaceHighlight" onClick={handleOpenScan} isLoading={isImporting}>
                         <ScanLine size={18} />
-                        <span className="hidden sm:inline">Escanear</span>
+                        <span className="hidden sm:inline">{t('transactions.scanReceipt')}</span>
                     </Button>
 
                     <div className="relative group">
                         <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleStatementImport} accept=".pdf,.ofx,.csv" />
                         <Button variant="secondary" className="!w-auto px-4 py-2 bg-surface hover:bg-surfaceHighlight border border-surfaceHighlight text-textMuted hover:text-white group-hover:border-primary">
                             <FileSpreadsheet size={18} />
-                            <span className="hidden sm:inline ml-2">Importar</span>
+                            <span className="hidden sm:inline ml-2">{t('transactions.importStatement')}</span>
                         </Button>
                     </div>
 
                     <Button className="!w-auto px-4 py-2" onClick={() => { setReceiptImage(null); setIsModalOpen(true); }}>
                         <Plus size={20} />
-                        <span className="hidden sm:inline">Nova Transação</span>
+                        <span className="hidden sm:inline">{t('transactions.newTransaction')}</span>
                     </Button>
                 </div>
             </div>
@@ -729,8 +729,8 @@ const Transactions: React.FC = () => {
 
             {/* New Transaction Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
-                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up relative">
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4" onClick={() => setIsModalOpen(false)}>
+                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up relative" onClick={(e) => e.stopPropagation()}>
 
                         {/* AI ANALYSIS OVERLAY */}
                         {isAnalyzing && (
@@ -881,8 +881,8 @@ const Transactions: React.FC = () => {
 
             {/* Transaction Details Modal with Edit Mode */}
             {selectedTransaction && !isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
-                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4" onClick={() => { setSelectedTransaction(null); setIsEditing(false); }}>
+                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
                         <div className="p-4 border-b border-surfaceHighlight flex justify-between items-center">
                             <h3 className="font-bold text-white">{isEditing ? 'Editar Transação' : 'Detalhes'}</h3>
                             <button onClick={() => { setSelectedTransaction(null); setIsEditing(false); }} className="text-textMuted hover:text-white"><X size={20} /></button>

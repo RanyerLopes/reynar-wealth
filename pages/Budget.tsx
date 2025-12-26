@@ -4,6 +4,7 @@ import { Card, Button, Input } from '../components/UI';
 import { Budget } from '../types';
 import { useTransactions } from '../hooks/useDatabase';
 import { format } from 'date-fns';
+import { useLanguage } from '../context/LanguageContext';
 
 // Categories available for budgeting
 const BUDGET_CATEGORIES = [
@@ -22,6 +23,7 @@ const STORAGE_KEY = 'reynar_budgets';
 
 const BudgetPage: React.FC = () => {
     const { transactions } = useTransactions();
+    const { t, formatCurrency } = useLanguage();
     const currentMonth = format(new Date(), 'yyyy-MM');
 
     // Load budgets from localStorage
@@ -107,7 +109,7 @@ const BudgetPage: React.FC = () => {
     };
 
     const handleDeleteBudget = (id: string) => {
-        if (confirm('Remover este orçamento?')) {
+        if (confirm(t('budget.removeBudget'))) {
             saveBudgets(budgets.filter(b => b.id !== id));
         }
     };
@@ -146,12 +148,12 @@ const BudgetPage: React.FC = () => {
             {/* Header */}
             <header className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-textMain">Orçamento Mensal</h2>
-                    <p className="text-textMuted text-sm">Defina limites por categoria e acompanhe seus gastos</p>
+                    <h2 className="text-2xl font-bold text-textMain">{t('budget.title')}</h2>
+                    <p className="text-textMuted text-sm">{t('budget.subtitle')}</p>
                 </div>
                 <Button className="!w-auto px-4 py-2" onClick={() => setIsModalOpen(true)}>
                     <Plus size={20} />
-                    <span className="hidden sm:inline">Novo Limite</span>
+                    <span className="hidden sm:inline">{t('budget.newLimit')}</span>
                 </Button>
             </header>
 
@@ -163,9 +165,9 @@ const BudgetPage: React.FC = () => {
                             <PiggyBank size={24} className="text-primary" />
                         </div>
                         <div>
-                            <p className="text-textMuted text-xs uppercase">Orçamento Total</p>
+                            <p className="text-textMuted text-xs uppercase">{t('budget.totalBudget')}</p>
                             <p className="text-xl font-bold text-white">
-                                R$ {totalBudget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                {formatCurrency(totalBudget)}
                             </p>
                         </div>
                     </div>
@@ -177,9 +179,9 @@ const BudgetPage: React.FC = () => {
                             <TrendingUp size={24} className="text-amber-500" />
                         </div>
                         <div>
-                            <p className="text-textMuted text-xs uppercase">Gasto no Mês</p>
+                            <p className="text-textMuted text-xs uppercase">{t('budget.spentThisMonth')}</p>
                             <p className="text-xl font-bold text-white">
-                                R$ {totalSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                {formatCurrency(totalSpent)}
                             </p>
                         </div>
                     </div>
@@ -196,10 +198,10 @@ const BudgetPage: React.FC = () => {
                         </div>
                         <div>
                             <p className="text-textMuted text-xs uppercase">
-                                {totalRemaining >= 0 ? 'Disponível' : 'Excedido'}
+                                {totalRemaining >= 0 ? t('budget.available') : t('budget.exceeded')}
                             </p>
                             <p className={`text-xl font-bold ${totalRemaining >= 0 ? 'text-green-500' : 'text-danger'}`}>
-                                R$ {Math.abs(totalRemaining).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                {formatCurrency(Math.abs(totalRemaining))}
                             </p>
                         </div>
                     </div>
@@ -212,12 +214,12 @@ const BudgetPage: React.FC = () => {
                     <div className="p-4 rounded-full bg-surfaceHighlight w-fit mx-auto mb-4">
                         <PiggyBank size={40} className="text-textMuted" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Nenhum orçamento definido</h3>
+                    <h3 className="text-lg font-semibold text-white mb-2">{t('budget.noBudgetTitle')}</h3>
                     <p className="text-textMuted text-sm mb-4">
-                        Defina limites mensais por categoria para controlar seus gastos
+                        {t('budget.noBudgetDesc')}
                     </p>
                     <Button className="!w-auto px-6 mx-auto" onClick={() => setIsModalOpen(true)}>
-                        <Plus size={18} /> Criar Primeiro Orçamento
+                        <Plus size={18} /> {t('budget.createFirst')}
                     </Button>
                 </Card>
             ) : (
@@ -236,7 +238,7 @@ const BudgetPage: React.FC = () => {
                                         <div>
                                             <h4 className="font-semibold text-white">{budget.category}</h4>
                                             <p className="text-xs text-textMuted">
-                                                R$ {budget.spent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} / R$ {budget.monthlyLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                {formatCurrency(budget.spent)} / {formatCurrency(budget.monthlyLimit)}
                                             </p>
                                         </div>
                                     </div>
@@ -244,12 +246,12 @@ const BudgetPage: React.FC = () => {
                                     <div className="flex items-center gap-2">
                                         {isOverBudget && (
                                             <span className="px-2 py-1 bg-danger/20 text-danger text-xs rounded-full flex items-center gap-1">
-                                                <AlertTriangle size={12} /> Excedido
+                                                <AlertTriangle size={12} /> {t('budget.exceeded')}
                                             </span>
                                         )}
                                         {isWarning && (
                                             <span className="px-2 py-1 bg-amber-500/20 text-amber-500 text-xs rounded-full flex items-center gap-1">
-                                                <AlertTriangle size={12} /> Atenção
+                                                <AlertTriangle size={12} /> {t('budget.attention')}
                                             </span>
                                         )}
 
@@ -279,9 +281,9 @@ const BudgetPage: React.FC = () => {
                                 </div>
 
                                 <div className="flex justify-between mt-2 text-xs text-textMuted">
-                                    <span>{percentage.toFixed(0)}% usado</span>
+                                    <span>{percentage.toFixed(0)}% {t('budget.used')}</span>
                                     <span>
-                                        Resta: R$ {Math.max(0, budget.monthlyLimit - budget.spent).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        {t('budget.remaining')}: {formatCurrency(Math.max(0, budget.monthlyLimit - budget.spent))}
                                     </span>
                                 </div>
                             </Card>
@@ -297,10 +299,10 @@ const BudgetPage: React.FC = () => {
                         <div className="p-6 border-b border-surfaceHighlight flex justify-between items-center">
                             <div>
                                 <h3 className="text-lg font-bold text-white">
-                                    {editingBudget ? 'Editar Orçamento' : 'Novo Orçamento'}
+                                    {editingBudget ? t('budget.editBudget') : t('budget.newBudget')}
                                 </h3>
                                 <p className="text-xs text-textMuted">
-                                    Defina um limite mensal para a categoria
+                                    {t('budget.setLimit')}
                                 </p>
                             </div>
                             <button onClick={closeModal} className="text-textMuted hover:text-white">
@@ -311,7 +313,7 @@ const BudgetPage: React.FC = () => {
                         <div className="p-6 space-y-4">
                             <div>
                                 <label className="text-xs font-medium text-textMuted uppercase tracking-wider ml-1 mb-2 block">
-                                    Categoria
+                                    {t('budget.category')}
                                 </label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {(editingBudget ? BUDGET_CATEGORIES : availableCategories).map(cat => (
@@ -320,8 +322,8 @@ const BudgetPage: React.FC = () => {
                                             type="button"
                                             onClick={() => setSelectedCategory(cat.name)}
                                             className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${selectedCategory === cat.name
-                                                    ? 'bg-primary/20 border-primary'
-                                                    : 'bg-surfaceHighlight border-transparent hover:border-textMuted'
+                                                ? 'bg-primary/20 border-primary'
+                                                : 'bg-surfaceHighlight border-transparent hover:border-textMuted'
                                                 }`}
                                         >
                                             <span className="text-xl">{cat.icon}</span>
@@ -334,12 +336,13 @@ const BudgetPage: React.FC = () => {
                             </div>
 
                             <Input
-                                label="Limite Mensal (R$)"
+                                label={t('budget.monthlyLimit')}
                                 type="number"
                                 placeholder="1000.00"
                                 value={monthlyLimit}
                                 onChange={(e) => setMonthlyLimit(e.target.value)}
                                 required
+                                isCurrency
                             />
 
                             <Button
@@ -347,7 +350,7 @@ const BudgetPage: React.FC = () => {
                                 disabled={!selectedCategory || !monthlyLimit}
                                 className="mt-4"
                             >
-                                {editingBudget ? 'Salvar Alterações' : 'Criar Orçamento'}
+                                {editingBudget ? t('budget.saveChanges') : t('budget.createBudget')}
                             </Button>
                         </div>
                     </div>

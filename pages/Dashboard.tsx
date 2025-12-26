@@ -14,6 +14,7 @@ import { Onboarding, useOnboarding } from '../components/Onboarding';
 import { useAuth } from '../context/AuthContext';
 import { useTransactions, useBills, useInvestments } from '../hooks/useDatabase';
 import { useLanguage } from '../context/LanguageContext';
+import { getColorForInvestmentType } from '../utils/investmentUtils';
 
 // Brighter, Neon Pastel Colors for High Contrast & Modern Look
 const COLORS = ['#c084fc', '#34d399', '#facc15', '#f87171', '#60a5fa'];
@@ -43,19 +44,26 @@ const Dashboard: React.FC = () => {
     // Privacy State
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
 
-    // User Data State - prefer auth user, then localStorage, then default
+    // User Data State - prefer nickname, then auth user, then localStorage, then default
     const getUserName = () => {
-        // From Supabase auth (Google login provides full_name)
+        // Priority 1: User-defined nickname (from Profile/Settings)
+        const storedNickname = localStorage.getItem('reynar_user_nickname');
+        if (storedNickname) return storedNickname;
+
+        // Priority 2: User-defined name (from Profile/Settings)
+        const storedName = localStorage.getItem('reynar_user_name');
+        if (storedName) return storedName;
+
+        // Priority 3: From Supabase auth (Google login provides full_name)
         if (authUser?.user_metadata?.full_name) {
             return authUser.user_metadata.full_name;
         }
-        // From Supabase auth (email as fallback)
+
+        // Priority 4: From Supabase auth (email as fallback)
         if (authUser?.email) {
             return authUser.email.split('@')[0];
         }
-        // From localStorage
-        const storedName = localStorage.getItem('finnova_user_name');
-        if (storedName) return storedName;
+
         // Default
         return 'Usuário';
     };
@@ -74,6 +82,13 @@ const Dashboard: React.FC = () => {
 
     // Total patrimony from investments
     const totalPatrimony = investments.reduce((acc, curr) => acc + curr.currentValue, 0);
+
+    // Determine dominant investment type for color coding
+    const dominantAsset = investments.reduce((prev, current) =>
+        (prev.currentValue > current.currentValue) ? prev : current
+        , { type: 'Default', currentValue: 0 } as any);
+
+    const patrimonyColor = getColorForInvestmentType(dominantAsset.type || 'Default');
 
     // Budget Calculations
     const baseIncome = userSalary ? parseFloat(userSalary) : totalIncome;
@@ -413,7 +428,14 @@ const Dashboard: React.FC = () => {
                     <div className="snap-center shrink-0 w-[85%] md:w-auto">
                         <Card className="h-full cursor-pointer" onClick={(e) => triggerCoinExplosion(e.clientX, e.clientY)}>
                             <div className="flex items-start justify-between mb-4">
-                                <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-500 border border-blue-500/20">
+                                <div
+                                    className="p-2.5 rounded-xl border transition-colors duration-500"
+                                    style={{
+                                        backgroundColor: `${patrimonyColor}20`, // 20 = 12% opacity (approx for tailwind /10)
+                                        color: patrimonyColor,
+                                        borderColor: `${patrimonyColor}30`
+                                    }}
+                                >
                                     <TrendingUp size={22} />
                                 </div>
                                 <Badge type="neutral">{t('dashboard.invested')}</Badge>

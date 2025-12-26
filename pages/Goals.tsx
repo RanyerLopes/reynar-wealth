@@ -7,9 +7,11 @@ import { format } from 'date-fns';
 import { useGamification } from '../context/GamificationContext';
 import { AIConsultant } from '../components/AIConsultant';
 import { useGoals } from '../hooks/useDatabase';
+import { useLanguage } from '../context/LanguageContext';
 
 const Goals: React.FC = () => {
     const { addXp } = useGamification();
+    const { t, formatCurrency } = useLanguage();
     const { goals: dbGoals, loading: goalsLoading, addGoal: addGoalToDb, updateGoal: updateGoalInDb } = useGoals();
     const [goals, setGoals] = useState<Goal[]>([]);
 
@@ -45,7 +47,7 @@ const Goals: React.FC = () => {
             id: Math.random().toString(),
             date: new Date(),
             amount: initialAmount,
-            note: 'Saldo Inicial'
+            note: t('goals.initialBalance')
         }] : [];
 
         const newGoal: Goal = {
@@ -92,7 +94,7 @@ const Goals: React.FC = () => {
             id: Math.random().toString(),
             date: new Date(),
             amount: amountToAdd,
-            note: depositNote || 'Aporte Manual'
+            note: depositNote || t('goals.manualDeposit')
         };
 
         const updatedGoals = goals.map(g => {
@@ -138,7 +140,7 @@ const Goals: React.FC = () => {
     };
 
     const handleDeleteGoal = (goalId: string) => {
-        if (confirm('Tem certeza que deseja excluir esta meta?')) {
+        if (confirm(t('goals.deleteConfirm'))) {
             setGoals(goals.filter(g => g.id !== goalId));
             setIsDetailModalOpen(false);
             setSelectedGoal(null);
@@ -149,12 +151,12 @@ const Goals: React.FC = () => {
         <div className="pb-24 md:pb-0 space-y-6 animate-fade-in relative">
             <header className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-textMain">Minhas Metas</h2>
-                    <p className="text-textMuted text-sm">Realize seus sonhos (Caixinhas)</p>
+                    <h2 className="text-2xl font-bold text-textMain">{t('goals.title')}</h2>
+                    <p className="text-textMuted text-sm">{t('goals.subtitle')}</p>
                 </div>
                 <Button className="!w-auto px-4 py-2" onClick={() => setIsAddModalOpen(true)}>
                     <Plus size={20} />
-                    <span className="hidden sm:inline">Nova Meta</span>
+                    <span className="hidden sm:inline">{t('goals.newGoal')}</span>
                 </Button>
             </header>
 
@@ -168,9 +170,9 @@ const Goals: React.FC = () => {
                 <div className="absolute right-0 top-0 p-8 opacity-10">
                     <Trophy size={120} className="text-white" />
                 </div>
-                <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Total Guardado</p>
-                <h3 className="text-4xl font-bold text-white mb-2">R$ {totalSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-                <p className="text-white/80 text-sm max-w-md">Você está construindo seu futuro. Continue assim!</p>
+                <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">{t('goals.totalSaved')}</p>
+                <h3 className="text-4xl font-bold text-white mb-2">{formatCurrency(totalSaved)}</h3>
+                <p className="text-white/80 text-sm max-w-md">{t('goals.buildingFuture')}</p>
             </div>
 
             {/* Goals Grid */}
@@ -193,7 +195,7 @@ const Goals: React.FC = () => {
                                 </div>
                                 <div className="bg-surfaceHighlight px-2 py-1 rounded-md text-[10px] text-textMuted flex items-center gap-1">
                                     {isCompleted ? <CheckCircle size={10} className="text-secondary" /> : <Target size={10} />}
-                                    {isCompleted ? 'Concluída!' : format(goal.deadline, 'MMM yyyy')}
+                                    {isCompleted ? t('goals.completed') + '!' : format(goal.deadline, 'MMM yyyy')}
                                 </div>
                             </div>
 
@@ -201,9 +203,9 @@ const Goals: React.FC = () => {
                                 <h3 className="font-bold text-lg text-textMain mb-1">{goal.name}</h3>
                                 <div className="flex justify-between items-end mb-2">
                                     <span className={`text-2xl font-semibold ${isCompleted ? 'text-secondary' : 'text-white'}`}>
-                                        R$ {goal.currentAmount.toLocaleString('pt-BR')}
+                                        {formatCurrency(goal.currentAmount)}
                                     </span>
-                                    <span className="text-xs text-textMuted mb-1">de R$ {goal.targetAmount.toLocaleString('pt-BR')}</span>
+                                    <span className="text-xs text-textMuted mb-1">{t('goals.targetAmount')}: {formatCurrency(goal.targetAmount)}</span>
                                 </div>
 
                                 <div className="w-full bg-surfaceHighlight h-2.5 rounded-full overflow-hidden mb-4">
@@ -225,9 +227,9 @@ const Goals: React.FC = () => {
                                 onClick={(e) => !isCompleted && openDepositModal(goal, e)}
                                 disabled={isCompleted}
                             >
-                                {isCompleted ? 'Concluída' : (
+                                {isCompleted ? t('goals.completed') : (
                                     <>
-                                        <Plus size={16} /> Adicionar Aporte
+                                        <Plus size={16} /> {t('goals.deposit')}
                                     </>
                                 )}
                             </Button>
@@ -242,206 +244,212 @@ const Goals: React.FC = () => {
                     <div className="p-4 rounded-full bg-surfaceHighlight group-hover:bg-primary/20 transition-colors">
                         <Plus size={24} />
                     </div>
-                    <span className="font-medium">Criar nova caixinha</span>
+                    <span className="font-medium">{t('goals.newGoal')}</span>
                 </button>
             </div>
 
             {/* Modal: Create Goal */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
-                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
-                        <div className="p-6 border-b border-surfaceHighlight flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-white">Nova Meta</h3>
-                            <button onClick={() => setIsAddModalOpen(false)} className="text-textMuted hover:text-white"><X size={20} /></button>
-                        </div>
-                        <form onSubmit={handleAddGoal} className="p-6 space-y-4">
-                            <div className="grid grid-cols-4 gap-2 mb-4">
-                                {['✈️', '🚗', '🏠', '💻', '🛡️', '🎓', '💍', '💰'].map(emoji => (
-                                    <button
-                                        type="button"
-                                        key={emoji}
-                                        onClick={() => setIcon(emoji)}
-                                        className={`text-2xl py-2 rounded-lg border ${icon === emoji ? 'border-primary bg-primary/20' : 'border-surfaceHighlight hover:bg-surfaceHighlight'}`}
-                                    >
-                                        {emoji}
-                                    </button>
-                                ))}
+            {
+                isAddModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4" onClick={() => setIsAddModalOpen(false)}>
+                        <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                            <div className="p-6 border-b border-surfaceHighlight flex justify-between items-center">
+                                <h3 className="text-lg font-bold text-white">{t('goals.newGoal')}</h3>
+                                <button onClick={() => setIsAddModalOpen(false)} className="text-textMuted hover:text-white"><X size={20} /></button>
                             </div>
-                            <Input label="Nome da Meta" placeholder="Ex: Viagem Disney" required value={name} onChange={e => setName(e.target.value)} />
-                            <Input label="Valor Alvo (R$)" type="number" placeholder="0,00" required value={target} onChange={e => setTarget(e.target.value)} />
-                            <Input label="Valor Inicial (Já guardado)" type="number" placeholder="0,00" value={initial} onChange={e => setInitial(e.target.value)} />
-                            <Input label="Prazo (Data)" type="date" required value={deadline} onChange={e => setDeadline(e.target.value)} />
-                            <Button type="submit" className="mt-4">Criar Meta</Button>
-                        </form>
+                            <form onSubmit={handleAddGoal} className="p-6 space-y-4">
+                                <div className="grid grid-cols-4 gap-2 mb-4">
+                                    {['✈️', '🚗', '🏠', '💻', '🛡️', '🎓', '💍', '💰'].map(emoji => (
+                                        <button
+                                            type="button"
+                                            key={emoji}
+                                            onClick={() => setIcon(emoji)}
+                                            className={`text-2xl py-2 rounded-lg border ${icon === emoji ? 'border-primary bg-primary/20' : 'border-surfaceHighlight hover:bg-surfaceHighlight'}`}
+                                        >
+                                            {emoji}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Input label={t('goals.goalName')} placeholder={t('goals.goalNamePlaceholder')} required value={name} onChange={e => setName(e.target.value)} />
+                                <Input label={t('goals.targetAmount')} type="number" placeholder="0,00" required value={target} onChange={e => setTarget(e.target.value)} isCurrency />
+                                <Input label={t('goals.initialAmount')} type="number" placeholder="0,00" value={initial} onChange={e => setInitial(e.target.value)} isCurrency />
+                                <Input label={t('goals.deadline')} type="date" required value={deadline} onChange={e => setDeadline(e.target.value)} />
+                                <Button type="submit" className="mt-4">{t('goals.createGoal')}</Button>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Modal: Deposit */}
-            {isDepositModalOpen && selectedGoal && (
-                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
-                    <div className="bg-surface w-full max-w-sm rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
-                        <div className={`p-6 border-b border-surfaceHighlight flex justify-between items-center bg-gradient-to-r from-surface to-surfaceHighlight rounded-t-2xl`}>
-                            <div>
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                    <Wallet size={18} className="text-secondary" /> Novo Aporte
-                                </h3>
-                                <p className="text-xs text-textMuted">Meta: {selectedGoal.name}</p>
-                            </div>
-                            <button onClick={() => setIsDepositModalOpen(false)} className="text-textMuted hover:text-white"><X size={20} /></button>
-                        </div>
-                        <form onSubmit={handleDeposit} className="p-6 space-y-6">
-                            <div className="text-center">
-                                <label className="text-sm font-medium text-textMuted uppercase block mb-2">Quanto você guardou?</label>
-                                <div className="flex items-center justify-center gap-1">
-                                    <span className="text-2xl font-bold text-textMuted">R$</span>
-                                    <input
-                                        type="number"
-                                        autoFocus
-                                        className="bg-transparent border-b-2 border-surfaceHighlight text-4xl font-bold text-white w-40 text-center outline-none focus:border-secondary transition-colors"
-                                        placeholder="0"
-                                        value={depositAmount}
-                                        onChange={e => setDepositAmount(e.target.value)}
-                                        required
-                                    />
+            {
+                isDepositModalOpen && selectedGoal && (
+                    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4" onClick={() => setIsDepositModalOpen(false)}>
+                        <div className="bg-surface w-full max-w-sm rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                            <div className={`p-6 border-b border-surfaceHighlight flex justify-between items-center bg-gradient-to-r from-surface to-surfaceHighlight rounded-t-2xl`}>
+                                <div>
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <Wallet size={18} className="text-secondary" /> {t('goals.depositModal')}
+                                    </h3>
+                                    <p className="text-xs text-textMuted">{selectedGoal.name}</p>
                                 </div>
+                                <button onClick={() => setIsDepositModalOpen(false)} className="text-textMuted hover:text-white"><X size={20} /></button>
                             </div>
+                            <form onSubmit={handleDeposit} className="p-6 space-y-6">
+                                <div className="text-center">
+                                    <label className="text-sm font-medium text-textMuted uppercase block mb-2">{t('goals.depositAmount')}</label>
+                                    <div className="flex items-center justify-center gap-1">
+                                        <span className="text-2xl font-bold text-textMuted">R$</span>
+                                        <input
+                                            type="number"
+                                            autoFocus
+                                            className="bg-transparent border-b-2 border-surfaceHighlight text-4xl font-bold text-white w-40 text-center outline-none focus:border-secondary transition-colors"
+                                            placeholder="0"
+                                            value={depositAmount}
+                                            onChange={e => setDepositAmount(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
 
-                            <Input
-                                label="Nota (Opcional)"
-                                placeholder="Ex: Economia do mercado"
-                                value={depositNote}
-                                onChange={e => setDepositNote(e.target.value)}
-                            />
+                                <Input
+                                    label="Nota (Opcional)"
+                                    placeholder="Ex: Economia do mercado"
+                                    value={depositNote}
+                                    onChange={e => setDepositNote(e.target.value)}
+                                />
 
-                            <div className="bg-surfaceHighlight/30 p-4 rounded-xl text-center">
-                                <p className="text-xs text-textMuted mb-1">Novo Saldo Estimado</p>
-                                <p className="text-xl font-bold text-white">
-                                    R$ {(selectedGoal.currentAmount + (parseFloat(depositAmount) || 0)).toLocaleString('pt-BR')}
-                                </p>
-                            </div>
+                                <div className="bg-surfaceHighlight/30 p-4 rounded-xl text-center">
+                                    <p className="text-xs text-textMuted mb-1">Novo Saldo Estimado</p>
+                                    <p className="text-xl font-bold text-white">
+                                        R$ {(selectedGoal.currentAmount + (parseFloat(depositAmount) || 0)).toLocaleString('pt-BR')}
+                                    </p>
+                                </div>
 
-                            <Button type="submit" variant="secondary" className="w-full">
-                                Confirmar Depósito
-                            </Button>
-                        </form>
+                                <Button type="submit" variant="secondary" className="w-full">
+                                    Confirmar Depósito
+                                </Button>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Modal: Detailed Goal View */}
-            {isDetailModalOpen && selectedGoal && (
-                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
-                    <div className="bg-surface w-full max-w-lg rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up max-h-[90vh] flex flex-col">
-                        {/* Header */}
-                        <div className={`p-6 border-b border-surfaceHighlight flex justify-between items-start rounded-t-2xl relative overflow-hidden`}>
-                            <div className={`absolute inset-0 opacity-20 ${selectedGoal.color.replace('bg-', 'bg-gradient-to-br from-black to-')}`}></div>
-                            <div className="relative z-10 flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl bg-surface/50 backdrop-blur-md flex items-center justify-center text-3xl shadow-lg">
-                                    {selectedGoal.icon}
+            {
+                isDetailModalOpen && selectedGoal && (
+                    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4" onClick={() => setIsDetailModalOpen(false)}>
+                        <div className="bg-surface w-full max-w-lg rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                            {/* Header */}
+                            <div className={`p-6 border-b border-surfaceHighlight flex justify-between items-start rounded-t-2xl relative overflow-hidden`}>
+                                <div className={`absolute inset-0 opacity-20 ${selectedGoal.color.replace('bg-', 'bg-gradient-to-br from-black to-')}`}></div>
+                                <div className="relative z-10 flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-2xl bg-surface/50 backdrop-blur-md flex items-center justify-center text-3xl shadow-lg">
+                                        {selectedGoal.icon}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white">{selectedGoal.name}</h3>
+                                        <p className="text-sm text-white/70">Alvo: R$ {selectedGoal.targetAmount.toLocaleString('pt-BR')}</p>
+                                    </div>
                                 </div>
+                                <button onClick={() => setIsDetailModalOpen(false)} className="text-white/70 hover:text-white bg-black/20 rounded-full p-1 relative z-10">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+                                {/* Status Card */}
+                                <div className="bg-surfaceHighlight/20 border border-surfaceHighlight rounded-2xl p-5">
+                                    <div className="flex justify-between items-end mb-2">
+                                        <span className="text-sm text-textMuted">Progresso Atual</span>
+                                        <span className="text-2xl font-bold text-white">
+                                            {Math.min((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100, 100).toFixed(1)}%
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-surfaceHighlight h-3 rounded-full overflow-hidden mb-2">
+                                        <div
+                                            className={`h-full ${selectedGoal.color} transition-all duration-1000`}
+                                            style={{ width: `${Math.min((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100, 100)}%` }}
+                                        ></div>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-textMuted">
+                                        <span>R$ {selectedGoal.currentAmount.toLocaleString('pt-BR')} guardados</span>
+                                        <span>Faltam R$ {Math.max(0, selectedGoal.targetAmount - selectedGoal.currentAmount).toLocaleString('pt-BR')}</span>
+                                    </div>
+                                </div>
+
+                                {/* History Section */}
                                 <div>
-                                    <h3 className="text-xl font-bold text-white">{selectedGoal.name}</h3>
-                                    <p className="text-sm text-white/70">Alvo: R$ {selectedGoal.targetAmount.toLocaleString('pt-BR')}</p>
-                                </div>
-                            </div>
-                            <button onClick={() => setIsDetailModalOpen(false)} className="text-white/70 hover:text-white bg-black/20 rounded-full p-1 relative z-10">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-                            {/* Status Card */}
-                            <div className="bg-surfaceHighlight/20 border border-surfaceHighlight rounded-2xl p-5">
-                                <div className="flex justify-between items-end mb-2">
-                                    <span className="text-sm text-textMuted">Progresso Atual</span>
-                                    <span className="text-2xl font-bold text-white">
-                                        {Math.min((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100, 100).toFixed(1)}%
-                                    </span>
-                                </div>
-                                <div className="w-full bg-surfaceHighlight h-3 rounded-full overflow-hidden mb-2">
-                                    <div
-                                        className={`h-full ${selectedGoal.color} transition-all duration-1000`}
-                                        style={{ width: `${Math.min((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100, 100)}%` }}
-                                    ></div>
-                                </div>
-                                <div className="flex justify-between text-xs text-textMuted">
-                                    <span>R$ {selectedGoal.currentAmount.toLocaleString('pt-BR')} guardados</span>
-                                    <span>Faltam R$ {Math.max(0, selectedGoal.targetAmount - selectedGoal.currentAmount).toLocaleString('pt-BR')}</span>
-                                </div>
-                            </div>
-
-                            {/* History Section */}
-                            <div>
-                                <h4 className="text-sm font-bold text-textMain uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    <TrendingUp size={16} className="text-secondary" /> Histórico de Aportes
-                                </h4>
-                                <div className="space-y-3">
-                                    {selectedGoal.history && selectedGoal.history.length > 0 ? (
-                                        selectedGoal.history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(tx => (
-                                            <div key={tx.id} className="flex justify-between items-center p-3 bg-surface border border-surfaceHighlight rounded-xl">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-secondary/10 text-secondary rounded-lg">
-                                                        <ArrowUpRight size={16} />
+                                    <h4 className="text-sm font-bold text-textMain uppercase tracking-wider mb-3 flex items-center gap-2">
+                                        <TrendingUp size={16} className="text-secondary" /> Histórico de Aportes
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {selectedGoal.history && selectedGoal.history.length > 0 ? (
+                                            selectedGoal.history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(tx => (
+                                                <div key={tx.id} className="flex justify-between items-center p-3 bg-surface border border-surfaceHighlight rounded-xl">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-secondary/10 text-secondary rounded-lg">
+                                                            <ArrowUpRight size={16} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-medium text-textMain">{tx.note || 'Depósito'}</p>
+                                                            <p className="text-xs text-textMuted">{format(new Date(tx.date), 'dd/MM/yyyy')}</p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium text-textMain">{tx.note || 'Depósito'}</p>
-                                                        <p className="text-xs text-textMuted">{format(new Date(tx.date), 'dd/MM/yyyy')}</p>
-                                                    </div>
+                                                    <span className="font-bold text-secondary">+ R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                                 </div>
-                                                <span className="font-bold text-secondary">+ R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-center text-sm text-textMuted py-4">Nenhum aporte registrado ainda.</p>
-                                    )}
+                                            ))
+                                        ) : (
+                                            <p className="text-center text-sm text-textMuted py-4">Nenhum aporte registrado ainda.</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Notes Section */}
+                                <div>
+                                    <h4 className="text-sm font-bold text-textMain uppercase tracking-wider mb-3 flex items-center gap-2">
+                                        <StickyNote size={16} className="text-primary" /> Anotações & Lembretes
+                                    </h4>
+                                    <div className="relative">
+                                        <textarea
+                                            className="w-full bg-surfaceHighlight/30 border border-surfaceHighlight rounded-xl p-4 text-sm text-textMain placeholder-zinc-600 focus:outline-none focus:border-primary min-h-[100px]"
+                                            placeholder="Escreva suas estratégias aqui..."
+                                            value={editingNotes}
+                                            onChange={(e) => setEditingNotes(e.target.value)}
+                                        ></textarea>
+                                        <button
+                                            onClick={handleSaveNotes}
+                                            className="absolute bottom-3 right-3 p-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-lg"
+                                            title="Salvar Notas"
+                                        >
+                                            <Save size={16} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Notes Section */}
-                            <div>
-                                <h4 className="text-sm font-bold text-textMain uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    <StickyNote size={16} className="text-primary" /> Anotações & Lembretes
-                                </h4>
-                                <div className="relative">
-                                    <textarea
-                                        className="w-full bg-surfaceHighlight/30 border border-surfaceHighlight rounded-xl p-4 text-sm text-textMain placeholder-zinc-600 focus:outline-none focus:border-primary min-h-[100px]"
-                                        placeholder="Escreva suas estratégias aqui..."
-                                        value={editingNotes}
-                                        onChange={(e) => setEditingNotes(e.target.value)}
-                                    ></textarea>
-                                    <button
-                                        onClick={handleSaveNotes}
-                                        className="absolute bottom-3 right-3 p-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-lg"
-                                        title="Salvar Notas"
-                                    >
-                                        <Save size={16} />
-                                    </button>
-                                </div>
+                            <div className="p-4 border-t border-surfaceHighlight bg-surface flex gap-3">
+                                <Button
+                                    variant="secondary"
+                                    onClick={(e) => openDepositModal(selectedGoal, e as any)}
+                                    disabled={selectedGoal.currentAmount >= selectedGoal.targetAmount}
+                                    className="flex-1"
+                                >
+                                    <Plus size={18} /> Novo Aporte
+                                </Button>
+                                <button
+                                    onClick={() => handleDeleteGoal(selectedGoal.id)}
+                                    className="p-3 rounded-xl border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 transition-colors"
+                                    title="Excluir meta"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
                             </div>
-                        </div>
-
-                        <div className="p-4 border-t border-surfaceHighlight bg-surface flex gap-3">
-                            <Button
-                                variant="secondary"
-                                onClick={(e) => openDepositModal(selectedGoal, e as any)}
-                                disabled={selectedGoal.currentAmount >= selectedGoal.targetAmount}
-                                className="flex-1"
-                            >
-                                <Plus size={18} /> Novo Aporte
-                            </Button>
-                            <button
-                                onClick={() => handleDeleteGoal(selectedGoal.id)}
-                                className="p-3 rounded-xl border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 transition-colors"
-                                title="Excluir meta"
-                            >
-                                <Trash2 size={18} />
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

@@ -14,6 +14,7 @@ import { ptBR } from 'date-fns/locale';
 import { CameraModal } from '../components/CameraModal';
 import { AIConsultant } from '../components/AIConsultant';
 import { useBills, useCards, useTransactions } from '../hooks/useDatabase';
+import { useLanguage } from '../context/LanguageContext';
 
 // Presets de Bancos Brasileiros (Moved from Cards.tsx)
 const BANK_PRESETS = [
@@ -31,6 +32,7 @@ const BANK_PRESETS = [
 
 const Bills: React.FC = () => {
     const { addXp } = useGamification();
+    const { t, formatCurrency } = useLanguage();
 
     // MAIN VIEW STATE: 'bills' or 'cards'
     const [activeSection, setActiveSection] = useState<'bills' | 'cards'>('bills');
@@ -228,7 +230,7 @@ const Bills: React.FC = () => {
                     </div>
                 </div>
                 <div className="text-right">
-                    <p className={`font-bold ${bill.isPaid ? 'text-textMuted' : 'text-textMain'}`}>R$ {bill.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    <p className={`font-bold ${bill.isPaid ? 'text-textMuted' : 'text-textMain'}`}>{formatCurrency(bill.amount)}</p>
                     <p className="text-[10px] text-textMuted uppercase">{bill.category}</p>
                 </div>
             </div>
@@ -238,7 +240,7 @@ const Bills: React.FC = () => {
 
     // --- LOGIC FOR CARDS ---
     const handleDeleteCard = (id: string) => {
-        if (confirm('Remover este cartão da sua carteira?')) {
+        if (confirm(t('common.confirmDelete'))) {
             setCards(cards.filter(c => c.id !== id));
             if (selectedCardInvoice?.id === id) setSelectedCardInvoice(null);
         }
@@ -643,8 +645,8 @@ const Bills: React.FC = () => {
             {!selectedCardInvoice && (
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-textMain">Contas & Cartões</h2>
-                        <p className="text-textMuted text-sm">Centralize suas dívidas e vencimentos</p>
+                        <h2 className="text-2xl font-bold text-textMain">{t('bills.title')}</h2>
+                        <p className="text-textMuted text-sm">{t('bills.subtitle')}</p>
                     </div>
 
                     <div className="flex gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
@@ -693,7 +695,7 @@ const Bills: React.FC = () => {
 
                         <Button className="!w-auto px-4 py-2" onClick={() => { setBillImage(null); setIsModalOpen(true); }}>
                             <Plus size={20} />
-                            <span className="hidden sm:inline">Nova Conta</span>
+                            <span className="hidden sm:inline">{t('bills.addBill')}</span>
                         </Button>
                     </div>
 
@@ -1003,8 +1005,8 @@ const Bills: React.FC = () => {
 
             {/* ADD BILL MODAL */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4 animate-fade-in">
-                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up relative">
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4 animate-fade-in" onClick={() => setIsModalOpen(false)}>
+                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up relative" onClick={(e) => e.stopPropagation()}>
 
                         {isAnalyzing && (
                             <div className="absolute inset-0 z-[60] bg-surface/90 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center text-center p-6 animate-fade-in">
@@ -1039,6 +1041,7 @@ const Bills: React.FC = () => {
                                 required
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
+                                isCurrency
                             />
                             <Input
                                 label="Data de Vencimento"
@@ -1100,8 +1103,8 @@ const Bills: React.FC = () => {
 
             {/* ADD CARD MODAL - Improved UI/UX */}
             {isAddCardModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4 animate-fade-in">
-                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up max-h-[85vh] md:max-h-[90vh] flex flex-col">
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4 animate-fade-in" onClick={() => setIsAddCardModalOpen(false)}>
+                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up max-h-[85vh] md:max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
                         {/* Header */}
                         <div className="p-4 md:p-6 border-b border-surfaceHighlight flex justify-between items-center shrink-0">
                             <div>
@@ -1143,6 +1146,7 @@ const Bills: React.FC = () => {
                                     required
                                     value={newCardLimit}
                                     onChange={(e) => setNewCardLimit(e.target.value)}
+                                    isCurrency
                                 />
 
                                 {/* Color Selection */}
@@ -1199,8 +1203,8 @@ const Bills: React.FC = () => {
 
             {/* EXPENSE MODAL */}
             {isExpenseModalOpen && selectedCardForExpense && (
-                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4 animate-fade-in">
-                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4 animate-fade-in" onClick={() => setIsExpenseModalOpen(false)}>
+                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
                         <div className={`p-6 border-b border-surfaceHighlight flex justify-between items-center rounded-t-2xl bg-gradient-to-r ${selectedCardForExpense.colorGradient}`}>
                             <div>
                                 <h3 className="text-lg font-bold text-white">Nova Compra</h3>

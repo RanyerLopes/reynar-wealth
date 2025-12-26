@@ -211,7 +211,33 @@ export const useInvestments = () => {
         }
     };
 
-    return { investments, loading, addInvestment, updateInvestmentValues, refetch: fetchInvestments };
+    const editInvestment = async (id: string, updates: Partial<Investment>) => {
+        try {
+            if (user) {
+                await db.updateInvestment(id, updates);
+            }
+            setInvestments(prev => prev.map(inv =>
+                inv.id === id ? { ...inv, ...updates } : inv
+            ));
+        } catch (err) {
+            console.error('Error editing investment:', err);
+            throw err;
+        }
+    };
+
+    const removeInvestment = async (id: string) => {
+        try {
+            if (user) {
+                await db.deleteInvestment(id, user.id);
+            }
+            setInvestments(prev => prev.filter(i => i.id !== id));
+        } catch (err) {
+            console.error('Error deleting investment:', err);
+            throw err;
+        }
+    };
+
+    return { investments, loading, addInvestment, removeInvestment, editInvestment, updateInvestmentValues, refetch: fetchInvestments };
 };
 
 // Hook for managing goals

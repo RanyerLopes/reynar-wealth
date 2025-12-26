@@ -92,10 +92,36 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLSe
   icon?: React.ReactNode;
   as?: 'input' | 'select';
   children?: React.ReactNode; // For select options
+  isCurrency?: boolean; // Block negative values and format as currency
 }
 
-export const Input: React.FC<InputProps> = ({ label, icon, as = 'input', className = '', children, ...props }) => {
+export const Input: React.FC<InputProps> = ({ label, icon, as = 'input', className = '', children, isCurrency, type, onChange, ...props }) => {
   const Component = as as any;
+
+  // Handler to block negative values for currency inputs
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isCurrency && type === 'number') {
+      const value = parseFloat(e.target.value);
+      if (value < 0) {
+        e.target.value = '0';
+        return;
+      }
+    }
+    if (onChange) {
+      onChange(e as any);
+    }
+  };
+
+  // Additional props for currency inputs
+  const currencyProps = isCurrency ? {
+    min: 0,
+    step: '0.01',
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === '-' || e.key === 'e') {
+        e.preventDefault();
+      }
+    }
+  } : {};
 
   return (
     <div className="space-y-1.5">
@@ -108,6 +134,9 @@ export const Input: React.FC<InputProps> = ({ label, icon, as = 'input', classNa
         )}
         <Component
           className={`w-full bg-surfaceHighlight/50 border border-surfaceHighlight rounded-xl px-4 py-3 text-textMain placeholder-zinc-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all ${icon ? 'pl-10' : ''} ${className}`}
+          type={type}
+          onChange={handleChange}
+          {...currencyProps}
           {...props}
         >
           {children}

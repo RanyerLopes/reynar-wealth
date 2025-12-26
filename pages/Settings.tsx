@@ -5,6 +5,7 @@ import { Card, Button, Input, triggerCoinExplosion } from '../components/UI';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SettingsProps {
     onLogout?: () => void;
@@ -13,6 +14,7 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { t, formatCurrency } = useLanguage();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // User data
@@ -121,13 +123,13 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             {showSuccess && (
                 <div className="fixed top-4 right-4 z-50 bg-secondary text-white px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg animate-slide-up">
                     <CheckCircle size={18} />
-                    Configurações salvas!
+                    {t('settings.saved')}
                 </div>
             )}
 
             <header>
-                <h2 className="text-2xl font-bold text-textMain">Ajustes</h2>
-                <p className="text-textMuted text-sm">Personalize sua experiência</p>
+                <h2 className="text-2xl font-bold text-textMain">{t('settings.title')}</h2>
+                <p className="text-textMuted text-sm">{t('settings.subtitle')}</p>
             </header>
 
             {/* Profile Section with Photo Upload */}
@@ -160,14 +162,14 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                         />
                     </div>
                     <div className="flex-1">
-                        <h3 className="font-bold text-lg text-white">Meu Perfil</h3>
-                        <p className="text-xs text-textMuted">Clique na foto para alterar</p>
+                        <h3 className="font-bold text-lg text-white">{t('settings.profile')}</h3>
+                        <p className="text-xs text-textMuted">{t('settings.changePhoto')}</p>
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     <Input
-                        label="Nome Completo"
+                        label={t('settings.name')}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         icon={<User size={16} />}
@@ -188,8 +190,8 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                                 type="button"
                                 onClick={() => setGender('male')}
                                 className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${gender === 'male'
-                                        ? 'bg-primary/20 border-primary text-primary'
-                                        : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-primary/50'
+                                    ? 'bg-primary/20 border-primary text-primary'
+                                    : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-primary/50'
                                     }`}
                             >
                                 👑 Masculino
@@ -198,8 +200,8 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                                 type="button"
                                 onClick={() => setGender('female')}
                                 className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${gender === 'female'
-                                        ? 'bg-pink-500/20 border-pink-500 text-pink-400'
-                                        : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-pink-500/50'
+                                    ? 'bg-pink-500/20 border-pink-500 text-pink-400'
+                                    : 'bg-surfaceHighlight border-surfaceHighlight text-textMuted hover:border-pink-500/50'
                                     }`}
                             >
                                 👸 Feminino
@@ -212,7 +214,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             {/* Subscription Card */}
             <Card className={`${isPro ? 'border-amber-500/30 bg-gradient-to-br from-amber-900/20 to-surface' : 'border-primary/50 bg-primary/5'}`}>
                 <h3 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
-                    <Crown size={20} className={isPro ? 'text-amber-400' : 'text-primary'} /> Assinatura
+                    <Crown size={20} className={isPro ? 'text-amber-400' : 'text-primary'} /> {t('settings.subscription')}
                 </h3>
                 {isPro ? (
                     <div className="flex justify-between items-center">
@@ -246,7 +248,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             <Card>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                        <Receipt size={20} className="text-danger" /> Contas Fixas
+                        <Receipt size={20} className="text-danger" /> {t('settings.fixedExpenses')}
                     </h3>
                     <button
                         onClick={() => setShowAddExpense(true)}
@@ -274,7 +276,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                                 <span className="text-sm text-white">{expense.name}</span>
                                 <div className="flex items-center gap-3">
                                     <span className="text-danger font-semibold text-sm">
-                                        R$ {expense.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        {formatCurrency(expense.amount)}
                                     </span>
                                     <button
                                         onClick={() => handleRemoveFixedExpense(expense.id)}
@@ -288,7 +290,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                         <div className="flex justify-between items-center pt-2 border-t border-surfaceHighlight">
                             <span className="text-sm text-textMuted">Total Mensal:</span>
                             <span className="font-bold text-danger">
-                                R$ {totalFixed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                {formatCurrency(totalFixed)}
                             </span>
                         </div>
                     </div>
@@ -298,7 +300,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             {/* Budget Control */}
             <Card>
                 <h3 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
-                    <Target size={20} className="text-amber-500" /> Meta de Gastos
+                    <Target size={20} className="text-amber-500" /> {t('settings.income')}
                 </h3>
                 <div className="space-y-4">
                     <Input
@@ -332,7 +334,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             {/* Data Migration */}
             <Card className="border-zinc-800 bg-surface/50">
                 <h3 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
-                    <FileSpreadsheet size={20} className="text-emerald-500" /> Migração de Dados
+                    <FileSpreadsheet size={20} className="text-emerald-500" /> {t('settings.importData')}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="relative border border-dashed border-zinc-600 hover:border-emerald-500 bg-surfaceHighlight/20 rounded-xl p-4 flex flex-col items-center text-center transition-all group cursor-pointer">
@@ -363,14 +365,14 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
 
             <div className="flex gap-4 pt-4">
                 <Button variant="secondary" onClick={handleSave}>
-                    <Save size={18} /> Salvar
+                    <Save size={18} /> {t('settings.save')}
                 </Button>
                 <Button
                     variant="danger"
                     className="bg-danger/10 text-danger border border-danger/20 hover:bg-danger hover:text-white"
                     onClick={onLogout}
                 >
-                    <LogOut size={18} /> Sair
+                    <LogOut size={18} /> {t('settings.logout')}
                 </Button>
             </div>
 
@@ -379,27 +381,28 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                 <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
                     <div className="bg-surface w-full max-w-sm rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
                         <div className="p-4 border-b border-surfaceHighlight flex justify-between items-center">
-                            <h3 className="font-bold text-white">Nova Conta Fixa</h3>
+                            <h3 className="font-bold text-white">{t('settings.addFixedExpense')}</h3>
                             <button onClick={() => setShowAddExpense(false)} className="text-textMuted hover:text-white">
                                 <X size={20} />
                             </button>
                         </div>
                         <div className="p-4 space-y-4">
                             <Input
-                                label="Nome"
+                                label={t('settings.expenseName')}
                                 placeholder="Ex: Aluguel, Netflix..."
                                 value={newExpenseName}
                                 onChange={e => setNewExpenseName(e.target.value)}
                             />
                             <Input
-                                label="Valor (R$)"
+                                label={t('settings.expenseAmount')}
                                 type="number"
                                 placeholder="0,00"
                                 value={newExpenseAmount}
                                 onChange={e => setNewExpenseAmount(e.target.value)}
+                                isCurrency
                             />
                             <Button onClick={handleAddFixedExpense}>
-                                <Plus size={18} /> Adicionar
+                                <Plus size={18} /> {t('settings.addFixedExpense')}
                             </Button>
                         </div>
                     </div>

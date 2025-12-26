@@ -3,12 +3,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Input, triggerCoinExplosion } from '../components/UI';
 import { Investment } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { TrendingUp, TrendingDown, AlertCircle, DollarSign, Plus, RefreshCw, X, Calculator, ArrowRight, Search, Loader2, Percent, Banknote, Scale, ChevronLeft, ChevronRight, Flame, Snowflake } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, DollarSign, Wallet, Calendar, PiggyBank, Briefcase, Plus, Loader2, Search, X, Trash2, RefreshCw, AlertCircle, Calculator, ArrowRight, Percent, Banknote, Scale, ChevronLeft, ChevronRight, Flame, Snowflake, Pencil } from 'lucide-react';
 import { useGamification } from '../context/GamificationContext';
 import { AIConsultant } from '../components/AIConsultant';
 import { useInvestments } from '../hooks/useDatabase';
 import { getMultipleQuotes, searchStocks, formatBRL, formatPercentChange, getChangeColor, POPULAR_STOCKS, StockQuote } from '../services/stockService';
 import { searchAssets, KnownAsset } from '../services/knownAssetsService';
+import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { getColorForInvestmentType } from '../utils/investmentUtils';
 
 // Known crypto tickers for auto-detection
 const KNOWN_CRYPTOS = [
@@ -82,11 +85,23 @@ const detectAssetType = (ticker: string): 'Ações' | 'Cripto' | 'Renda Fixa' | 
     return 'Outros';
 };
 
+// Helper function to get color based on asset type
+const getAssetColor = (type: string | undefined): string => {
+    const t = (type || '').trim().toLowerCase();
+    if (t.includes('cripto')) return '#f59e0b'; // Laranja/Amber
+    if (t.includes('renda') || t.includes('fixa')) return '#34d399'; // Verde
+    if (t.includes('fii')) return '#60a5fa'; // Azul
+    if (t.includes('outro')) return '#f472b6'; // Rosa
+    return '#8b5cf6'; // Roxo (Ações - default)
+};
+
 const Investments: React.FC = () => {
+    const { user } = useAuth();
     const { addXp } = useGamification();
+    const { t, formatCurrency } = useLanguage();
 
     // Use database hook for investments
-    const { investments: dbInvestments, loading: investmentsLoading, addInvestment: addInvestmentToDb, updateInvestmentValues } = useInvestments();
+    const { investments: dbInvestments, loading: investmentsLoading, addInvestment: addInvestmentToDb, removeInvestment, editInvestment: editInvestmentInDb, updateInvestmentValues } = useInvestments();
     const [investments, setInvestments] = useState<Investment[]>([]);
 
     // Sync database investments with local state
@@ -98,10 +113,17 @@ const Investments: React.FC = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
 
+    // Edit Modal States
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingAsset, setEditingAsset] = useState<Investment | null>(null);
+    const [editQuantity, setEditQuantity] = useState('');
+    const [editAmountInvested, setEditAmountInvested] = useState('');
+
     // Form States
     const [assetName, setAssetName] = useState('');
     const [assetType, setAssetType] = useState('Ações');
     const [amountInvested, setAmountInvested] = useState('');
+    const [quantity, setQuantity] = useState('');
 
     // Autocomplete States
     const [suggestions, setSuggestions] = useState<KnownAsset[]>([]);
@@ -169,30 +191,94 @@ const Investments: React.FC = () => {
     const totalReturn = totalValue - totalInvested;
     const returnPercentage = totalInvested > 0 ? (totalReturn / totalInvested) * 100 : 0;
 
-    const data = investments.map(i => ({ name: i.type, value: i.currentValue }));
-    const COLORS = ['#a78bfa', '#fbbf24', '#34d399', '#60a5fa', '#f472b6'];
+    // Group investments by type and sum values
+    const data = Object.entries(
+        investments.reduce((acc, inv) => {
+            const type = inv.type || 'Outros';
+            acc[type] = (acc[type] || 0) + inv.currentValue;
+            return acc;
+        }, {} as Record<string, number>)
+    ).map(([name, value]) => ({ name, value })).filter(item => item.value > 0);
+
+
+    const COLORS = ['#a78bfa', '#f59e0b', '#34d399', '#60a5fa', '#f472b6'];
 
     // Handlers
-    const handleAddAsset = (e: React.FormEvent) => {
+    const handleAddAsset = async (e: React.FormEvent) => {
         e.preventDefault();
-        const invested = parseFloat(amountInvested);
+        const invested = parseFloat(amountInvested.replace(',', '.'));
 
-        const newAsset: Investment = {
-            id: Math.random().toString(),
+        // Validar se o valor é válido
+        if (isNaN(invested) || invested <= 0) {
+            alert('Por favor, insira um valor válido para o investimento.');
+            return;
+        }
+
+        const qty = quantity ? parseFloat(quantity.replace(',', '.')) : undefined;
+        const pricePerUnit = qty && qty > 0 ? invested / qty : undefined;
+
+        const newAsset: Omit<Investment, 'id'> = {
             assetName: assetName.toUpperCase(),
             type: assetType as any,
+            quantity: qty,
+            purchasePrice: pricePerUnit,
             amountInvested: invested,
             currentValue: invested, // Starts equal to invested
             performance: 0
         };
 
-        setInvestments([...investments, newAsset]);
-        setIsAddModalOpen(false);
-        addXp(30); // Reward for investing
+        try {
+            await addInvestmentToDb(newAsset);
+            setIsAddModalOpen(false);
+            addXp(30); // Reward for investing
 
-        setAssetName('');
-        setAmountInvested('');
-        triggerCoinExplosion(window.innerWidth / 2, window.innerHeight / 2);
+            setAssetName('');
+            setAmountInvested('');
+            setQuantity('');
+            triggerCoinExplosion(window.innerWidth / 2, window.innerHeight / 2);
+        } catch (error) {
+            console.error('Error adding investment:', error);
+            alert('Erro ao salvar investimento. Verifique se você está logado e se as colunas "quantity" e "purchase_price" existem no banco de dados.');
+        }
+    };
+
+    // Open edit modal with asset data
+    const openEditModal = (asset: Investment) => {
+        setEditingAsset(asset);
+        setEditQuantity(asset.quantity?.toString() || '');
+        setEditAmountInvested(asset.amountInvested.toString());
+        setIsEditModalOpen(true);
+    };
+
+    // Handle edit asset submission
+    const handleEditAsset = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingAsset) return;
+
+        const newAmountInvested = parseFloat(editAmountInvested.replace(',', '.'));
+        const newQuantity = editQuantity ? parseFloat(editQuantity.replace(',', '.')) : undefined;
+
+        if (isNaN(newAmountInvested) || newAmountInvested <= 0) {
+            alert('Por favor, insira um valor válido.');
+            return;
+        }
+
+        const pricePerUnit = newQuantity && newQuantity > 0 ? newAmountInvested / newQuantity : undefined;
+
+        try {
+            await editInvestmentInDb(editingAsset.id, {
+                quantity: newQuantity,
+                amountInvested: newAmountInvested,
+                currentValue: newAmountInvested, // Update current value to match new invested amount
+                purchasePrice: pricePerUnit
+            });
+            setIsEditModalOpen(false);
+            setEditingAsset(null);
+            addXp(10); // Small reward for updating
+        } catch (error) {
+            console.error('Error editing investment:', error);
+            alert('Erro ao editar investimento.');
+        }
     };
 
     // Live stock quotes state
@@ -303,7 +389,7 @@ const Investments: React.FC = () => {
             return (
                 <div className="bg-white p-3 rounded-lg shadow-xl border border-zinc-200">
                     <p className="text-zinc-900 font-bold text-sm">
-                        {payload[0].name}: R$ {payload[0].value.toLocaleString('pt-BR')}
+                        {payload[0].name}: {formatCurrency(payload[0].value)}
                     </p>
                 </div>
             );
@@ -315,8 +401,8 @@ const Investments: React.FC = () => {
         <div className="pb-24 md:pb-0 space-y-6 animate-fade-in relative">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-textMain">Investimentos</h2>
-                    <p className="text-textMuted text-sm">Evolução do Patrimônio</p>
+                    <h2 className="text-2xl font-bold text-textMain">{t('investments.title')}</h2>
+                    <p className="text-textMuted text-sm">{t('investments.subtitle')}</p>
                 </div>
 
                 <div className="flex gap-2 w-full md:w-auto">
@@ -327,11 +413,10 @@ const Investments: React.FC = () => {
                         isLoading={isLoadingQuotes}
                     >
                         <RefreshCw size={18} className={isLoadingQuotes ? 'animate-spin' : ''} />
-                        <span className="hidden sm:inline">Atualizar Cotações</span>
                     </Button>
                     <Button className="!w-auto px-4 py-2" onClick={() => setIsAddModalOpen(true)}>
                         <Plus size={20} />
-                        <span className="hidden sm:inline">Novo Ativo</span>
+                        <span className="hidden sm:inline">{t('investments.addAsset')}</span>
                     </Button>
                 </div>
             </header>
@@ -585,7 +670,7 @@ const Investments: React.FC = () => {
                     <p className="text-textMuted text-xs uppercase">Saldo Total</p>
                     <h3 className="text-3xl font-bold text-white mt-1">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                     <div className="mt-2 flex items-center gap-2">
-                        <span className={`${returnPercentage >= 0 ? 'text-secondary' : 'text-danger'} text-sm font-medium flex items-center gap-1`}>
+                        <span className={`${returnPercentage >= 0 ? 'text-secondary' : 'text-danger'} text - sm font - medium flex items - center gap - 1`}>
                             <TrendingUp size={14} /> {returnPercentage >= 0 ? '+' : ''}{returnPercentage.toFixed(1)}%
                         </span>
                         <span className="text-zinc-500 text-xs">Rentabilidade Geral</span>
@@ -599,7 +684,7 @@ const Investments: React.FC = () => {
 
                 <Card>
                     <p className="text-textMuted text-xs uppercase">Lucro/Prejuízo</p>
-                    <h3 className={`text-2xl font-bold mt-1 ${totalReturn >= 0 ? 'text-secondary' : 'text-danger'}`}>
+                    <h3 className={`text - 2xl font - bold mt - 1 ${totalReturn >= 0 ? 'text-secondary' : 'text-danger'} `}>
                         {totalReturn >= 0 ? '+' : ''} R$ {totalReturn.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </h3>
                 </Card>
@@ -622,7 +707,7 @@ const Investments: React.FC = () => {
                                     dataKey="value"
                                 >
                                     {data.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell key={`cell-${index}`} fill={getColorForInvestmentType(entry.name)} />
                                     ))}
                                 </Pie>
                                 <Tooltip content={<CustomTooltip />} />
@@ -632,7 +717,7 @@ const Investments: React.FC = () => {
                     <div className="flex flex-wrap gap-2 justify-center mt-4">
                         {data.map((entry, index) => (
                             <div key={index} className="flex items-center gap-1 text-xs text-textMuted">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getColorForInvestmentType(entry.name) }}></div>
                                 {entry.name}
                             </div>
                         ))}
@@ -672,12 +757,28 @@ const Investments: React.FC = () => {
                                                     }}
                                                 />
                                             ) : null}
-                                            <div className={`p-3 bg-primary/10 rounded-xl text-primary group-hover:bg-primary group-hover:text-white transition-colors ${hasLogo ? 'hidden' : ''}`}>
+                                            {/* Dynamic Icon with Color based on Asset Type */}
+                                            <div
+                                                className={`p-3 rounded-xl ${hasLogo ? 'hidden' : ''}`}
+                                                style={{
+                                                    backgroundColor: `${getAssetColor(asset.type)}20`,
+                                                    color: getAssetColor(asset.type),
+                                                    border: `1px solid ${getAssetColor(asset.type)}40`
+                                                }}
+                                            >
                                                 <DollarSign size={20} />
                                             </div>
                                             <div>
-                                                <p className="font-bold text-textMain">{asset.assetName}</p>
-                                                <p className="text-xs text-textMuted">{asset.type}</p>
+                                                <p
+                                                    className="font-bold"
+                                                    style={{ color: getAssetColor(asset.type) }}
+                                                >
+                                                    {asset.assetName}
+                                                </p>
+                                                <p className="text-xs text-textMuted">
+                                                    {asset.type}
+                                                    {asset.quantity && <span className="ml-1 text-primary">• {asset.quantity} {asset.type === 'Cripto' ? 'moedas' : 'cotas'}</span>}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="text-right">
@@ -686,6 +787,28 @@ const Investments: React.FC = () => {
                                                 {asset.performance >= 0 ? '+' : ''}{asset.performance.toFixed(2)}%
                                             </p>
                                         </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openEditModal(asset);
+                                            }}
+                                            className="ml-4 p-2 text-zinc-600 hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
+                                            title="Editar ativo"
+                                        >
+                                            <Pencil size={18} />
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (window.confirm(`Deseja remover ${asset.assetName}?`)) {
+                                                    removeInvestment(asset.id);
+                                                }
+                                            }}
+                                            className="p-2 text-zinc-600 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
+                                            title="Remover ativo"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
                                     </div>
                                 );
                             })
@@ -718,6 +841,7 @@ const Investments: React.FC = () => {
                                 value={simMonthly}
                                 onChange={(e) => setSimMonthly(e.target.value)}
                                 className="bg-black/40"
+                                isCurrency
                             />
                             <Input
                                 label="Anos Investindo"
@@ -762,8 +886,8 @@ const Investments: React.FC = () => {
 
             {/* Add Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
-                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
+                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4" onClick={() => setIsAddModalOpen(false)}>
+                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
                         <div className="p-6 border-b border-surfaceHighlight flex justify-between items-center">
                             <h3 className="text-lg font-bold text-white">Novo Investimento</h3>
                             <button onClick={() => setIsAddModalOpen(false)} className="text-textMuted hover:text-white"><X size={20} /></button>
@@ -799,11 +923,11 @@ const Investments: React.FC = () => {
                                                 onClick={() => handleSelectSuggestion(asset)}
                                                 className="w-full px-4 py-3 flex items-center gap-3 hover:bg-surfaceHighlight transition-colors text-left border-b border-surfaceHighlight/50 last:border-0"
                                             >
-                                                <span className={`text-lg ${asset.type === 'Cripto' ? 'text-amber-400' :
-                                                        asset.type === 'FIIs' ? 'text-blue-400' :
-                                                            asset.type === 'Renda Fixa' ? 'text-green-400' :
-                                                                'text-purple-400'
-                                                    }`}>
+                                                <span className={`text - lg ${asset.type === 'Cripto' ? 'text-amber-400' :
+                                                    asset.type === 'FIIs' ? 'text-blue-400' :
+                                                        asset.type === 'Renda Fixa' ? 'text-green-400' :
+                                                            'text-purple-400'
+                                                    } `}>
                                                     {asset.type === 'Cripto' && '₿'}
                                                     {asset.type === 'FIIs' && '🏢'}
                                                     {asset.type === 'Renda Fixa' && '💵'}
@@ -812,11 +936,11 @@ const Investments: React.FC = () => {
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-semibold text-white">{asset.symbol}</span>
-                                                        <span className={`text-xs px-1.5 py-0.5 rounded ${asset.type === 'Cripto' ? 'bg-amber-500/20 text-amber-400' :
-                                                                asset.type === 'FIIs' ? 'bg-blue-500/20 text-blue-400' :
-                                                                    asset.type === 'Renda Fixa' ? 'bg-green-500/20 text-green-400' :
-                                                                        'bg-purple-500/20 text-purple-400'
-                                                            }`}>
+                                                        <span className={`text - xs px - 1.5 py - 0.5 rounded ${asset.type === 'Cripto' ? 'bg-amber-500/20 text-amber-400' :
+                                                            asset.type === 'FIIs' ? 'bg-blue-500/20 text-blue-400' :
+                                                                asset.type === 'Renda Fixa' ? 'bg-green-500/20 text-green-400' :
+                                                                    'bg-purple-500/20 text-purple-400'
+                                                            } `}>
                                                             {asset.type}
                                                         </span>
                                                     </div>
@@ -833,18 +957,18 @@ const Investments: React.FC = () => {
                                 {/* Type badge */}
                                 {assetName.length >= 2 && !showSuggestions && (
                                     <div className="mt-2 flex items-center gap-2">
-                                        <span className={`text-xs px-2 py-1 rounded-full ${assetType === 'Cripto' ? 'bg-amber-500/20 text-amber-400' :
+                                        <span className={`text - xs px - 2 py - 1 rounded - full ${assetType === 'Cripto' ? 'bg-amber-500/20 text-amber-400' :
                                             assetType === 'FIIs' ? 'bg-blue-500/20 text-blue-400' :
                                                 assetType === 'Renda Fixa' ? 'bg-green-500/20 text-green-400' :
                                                     assetType === 'Outros' ? 'bg-red-500/20 text-red-400' :
                                                         'bg-purple-500/20 text-purple-400'
-                                            }`}>
+                                            } `}>
                                             {assetType === 'Cripto' && '₿ '}
                                             {assetType === 'FIIs' && '🏢 '}
                                             {assetType === 'Renda Fixa' && '💵 '}
                                             {assetType === 'Ações' && '📈 '}
                                             {assetType === 'Outros' && '❓ '}
-                                            {assetType === 'Outros' ? 'Não reconhecido' : `Detectado: ${assetType}`}
+                                            {assetType === 'Outros' ? 'Não reconhecido' : `Detectado: ${assetType} `}
                                         </span>
                                     </div>
                                 )}
@@ -853,12 +977,12 @@ const Investments: React.FC = () => {
                             {/* Tipo de Ativo - Read-only, auto-detected */}
                             <div>
                                 <label className="text-sm font-medium text-textMuted mb-1.5 block">Tipo de Ativo</label>
-                                <div className={`w-full px-4 py-3 rounded-xl border flex items-center gap-3 transition-all ${assetType === 'Cripto' ? 'bg-amber-500/10 border-amber-500/30' :
+                                <div className={`w - full px - 4 py - 3 rounded - xl border flex items - center gap - 3 transition - all ${assetType === 'Cripto' ? 'bg-amber-500/10 border-amber-500/30' :
                                     assetType === 'FIIs' ? 'bg-blue-500/10 border-blue-500/30' :
                                         assetType === 'Renda Fixa' ? 'bg-green-500/10 border-green-500/30' :
                                             assetType === 'Outros' ? 'bg-red-500/10 border-red-500/30' :
                                                 'bg-purple-500/10 border-purple-500/30'
-                                    }`}>
+                                    } `}>
                                     <span className="text-xl">
                                         {assetType === 'Cripto' && '₿'}
                                         {assetType === 'FIIs' && '🏢'}
@@ -866,12 +990,12 @@ const Investments: React.FC = () => {
                                         {assetType === 'Ações' && '📈'}
                                         {assetType === 'Outros' && '❓'}
                                     </span>
-                                    <span className={`font-semibold ${assetType === 'Cripto' ? 'text-amber-400' :
+                                    <span className={`font - semibold ${assetType === 'Cripto' ? 'text-amber-400' :
                                         assetType === 'FIIs' ? 'text-blue-400' :
                                             assetType === 'Renda Fixa' ? 'text-green-400' :
                                                 assetType === 'Outros' ? 'text-red-400' :
                                                     'text-purple-400'
-                                        }`}>
+                                        } `}>
                                         {assetType}
                                     </span>
                                     <span className="text-[10px] text-textMuted ml-auto bg-black/20 px-2 py-0.5 rounded-full">Automático</span>
@@ -883,6 +1007,17 @@ const Investments: React.FC = () => {
                                 )}
                             </div>
 
+                            {/* Quantidade (para ações/cripto/FIIs) */}
+                            {(assetType === 'Ações' || assetType === 'Cripto' || assetType === 'FIIs') && (
+                                <Input
+                                    label={`Quantidade de ${assetType === 'Cripto' ? 'moedas' : 'cotas/ações'} (opcional)`}
+                                    type="number"
+                                    placeholder="Ex: 100"
+                                    value={quantity}
+                                    onChange={e => setQuantity(e.target.value)}
+                                />
+                            )}
+
                             <Input
                                 label="Valor Total Investido (R$)"
                                 type="number"
@@ -890,6 +1025,7 @@ const Investments: React.FC = () => {
                                 required
                                 value={amountInvested}
                                 onChange={e => setAmountInvested(e.target.value)}
+                                isCurrency
                             />
 
                             <div className="p-3 bg-surfaceHighlight rounded-xl text-xs text-textMuted">
@@ -897,6 +1033,49 @@ const Investments: React.FC = () => {
                             </div>
 
                             <Button type="submit" className="mt-4">Salvar na Carteira</Button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {isEditModalOpen && editingAsset && (
+                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4" onClick={() => setIsEditModalOpen(false)}>
+                    <div className="bg-surface w-full max-w-md rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-6 border-b border-surfaceHighlight flex justify-between items-center">
+                            <div>
+                                <h3 className="text-lg font-bold text-white">Editar {editingAsset.assetName}</h3>
+                                <p className="text-xs text-textMuted">{editingAsset.type}</p>
+                            </div>
+                            <button onClick={() => setIsEditModalOpen(false)} className="text-textMuted hover:text-white"><X size={20} /></button>
+                        </div>
+                        <form onSubmit={handleEditAsset} className="p-6 space-y-4">
+                            {/* Show quantity field for stocks, crypto and FIIs */}
+                            {(editingAsset.type === 'Ações' || editingAsset.type === 'Cripto' || editingAsset.type === 'FIIs') && (
+                                <Input
+                                    label={`Quantidade de ${editingAsset.type === 'Cripto' ? 'moedas' : 'cotas/ações'}`}
+                                    type="number"
+                                    placeholder="Ex: 100"
+                                    value={editQuantity}
+                                    onChange={e => setEditQuantity(e.target.value)}
+                                />
+                            )}
+
+                            <Input
+                                label="Valor Total Investido (R$)"
+                                type="number"
+                                placeholder="0,00"
+                                required
+                                value={editAmountInvested}
+                                onChange={e => setEditAmountInvested(e.target.value)}
+                                isCurrency
+                            />
+
+                            <div className="p-3 bg-surfaceHighlight rounded-xl text-xs text-textMuted">
+                                <p>💡 Atualize os valores conforme suas operações na corretora.</p>
+                            </div>
+
+                            <Button type="submit" className="mt-4">Salvar Alterações</Button>
                         </form>
                     </div>
                 </div>

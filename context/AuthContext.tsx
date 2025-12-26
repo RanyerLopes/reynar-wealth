@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase, onAuthStateChange, signInWithGoogle, signOut as supabaseSignOut, getCurrentUser } from '../services/supabase';
 import { User } from '@supabase/supabase-js';
+import { getUserProfile } from '../services/databaseService';
 
 interface AuthContextType {
     user: User | null;
@@ -8,6 +9,7 @@ interface AuthContextType {
     signInWithGoogle: () => Promise<{ data: any; error: any }>;
     signOut: () => Promise<void>;
     isAuthenticated: boolean;
+    loadUserPreferences: (userId: string) => Promise<{ language?: string; currency?: string } | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,12 +104,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
+    // Load user language/currency preferences from database
+    const loadUserPreferences = async (userId: string) => {
+        try {
+            const profile = await getUserProfile(userId);
+            if (profile) {
+                return {
+                    language: profile.language,
+                    currency: profile.currency
+                };
+            }
+            return null;
+        } catch (error) {
+            console.error('Error loading user preferences:', error);
+            return null;
+        }
+    };
+
     const value: AuthContextType = {
         user,
         loading,
         signInWithGoogle,
         signOut: handleSignOut,
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
+        loadUserPreferences
     };
 
     return (

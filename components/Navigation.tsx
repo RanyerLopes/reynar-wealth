@@ -4,6 +4,7 @@ import { Home, PieChart, LogOut, List, CalendarClock, Target, Settings, HandCoin
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 import { ReynarLogo } from './UI';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NavProps {
   onLogout: () => void;
@@ -12,6 +13,7 @@ interface NavProps {
 export const Navigation: React.FC<NavProps> = ({ onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   // We don't need to check plan here anymore for banners, 
   // as the App.tsx Paywall ensures only paid users see this.
 
@@ -30,15 +32,15 @@ export const Navigation: React.FC<NavProps> = ({ onLogout }) => {
   const handleNav = (path: string) => navigate(path);
 
   const navItems = [
-    { icon: <Home size={20} />, label: 'Início', path: AppRoutes.DASHBOARD },
-    { icon: <List size={20} />, label: 'Extrato', path: AppRoutes.TRANSACTIONS },
-    { icon: <Wallet size={20} />, label: 'Orçamento', path: AppRoutes.BUDGET },
-    { icon: <CalendarClock size={20} />, label: 'Contas', path: AppRoutes.BILLS },
-    { icon: <Target size={20} />, label: 'Metas', path: AppRoutes.GOALS },
-    { icon: <PieChart size={20} />, label: 'Investir', path: AppRoutes.INVESTMENTS },
-    { icon: <HandCoins size={20} />, label: 'Me Devem', path: AppRoutes.LOANS },
-    { icon: <FileText size={20} />, label: 'Relatórios', path: AppRoutes.REPORTS },
-    { icon: <Crown size={20} />, label: 'Planos', path: AppRoutes.PRICING },
+    { icon: <Home size={20} />, label: t('nav.dashboard'), path: AppRoutes.DASHBOARD },
+    { icon: <List size={20} />, label: t('nav.transactions'), path: AppRoutes.TRANSACTIONS },
+    { icon: <Wallet size={20} />, label: t('nav.budget'), path: AppRoutes.BUDGET },
+    { icon: <CalendarClock size={20} />, label: t('nav.bills'), path: AppRoutes.BILLS },
+    { icon: <Target size={20} />, label: t('nav.goals'), path: AppRoutes.GOALS },
+    { icon: <PieChart size={20} />, label: t('nav.investments'), path: AppRoutes.INVESTMENTS },
+    { icon: <HandCoins size={20} />, label: t('nav.loans'), path: AppRoutes.LOANS },
+    { icon: <FileText size={20} />, label: t('nav.reports'), path: AppRoutes.REPORTS },
+    { icon: <Crown size={20} />, label: t('profile.plan'), path: AppRoutes.PRICING },
   ];
 
   return (
@@ -84,12 +86,12 @@ export const Navigation: React.FC<NavProps> = ({ onLogout }) => {
               }`}
           >
             <Settings size={18} />
-            <span className="text-sm">Configurações</span>
+            <span className="text-sm">{t('nav.settings')}</span>
           </button>
 
-          <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-2 text-textMuted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors text-sm">
-            <LogOut size={18} />
-            <span>Sair</span>
+          <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-2 text-textMuted hover:text-white hover:bg-danger/20 rounded-lg transition-colors text-sm group">
+            <LogOut size={18} className="group-hover:text-danger" />
+            <span>{t('nav.logout')}</span>
           </button>
         </div>
       </aside>
@@ -122,7 +124,7 @@ export const Navigation: React.FC<NavProps> = ({ onLogout }) => {
               <div className={`p-1.5 rounded-full transition-colors ${isActive(AppRoutes.SETTINGS) ? 'bg-primary/20' : 'bg-transparent'}`}>
                 <Settings size={20} />
               </div>
-              <span className="text-[9px] font-medium truncate w-full text-center">Ajustes</span>
+              <span className="text-[9px] font-medium truncate w-full text-center">{t('nav.settings')}</span>
             </button>
           </div>
 
