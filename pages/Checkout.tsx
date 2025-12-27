@@ -232,19 +232,19 @@ const Checkout: React.FC = () => {
                                 </span>
                             </div>
                         </div>
-                    </Card>
 
-                    {/* Security badges */}
-                    <div className="flex items-center justify-center gap-6 mt-6 text-xs text-textMuted">
-                        <div className="flex items-center gap-1">
-                            <Lock size={12} />
-                            <span>SSL 256-bit</span>
+                        {/* Security badges */}
+                        <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-surfaceHighlight text-xs text-textMuted">
+                            <div className="flex items-center gap-1">
+                                <Lock size={12} />
+                                <span>SSL 256-bit</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Shield size={12} />
+                                <span>Dados seguros</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <Shield size={12} />
-                            <span>Dados seguros</span>
-                        </div>
-                    </div>
+                    </Card>
                 </div>
 
                 {/* RIGHT: Payment Form */}
