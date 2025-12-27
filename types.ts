@@ -99,6 +99,16 @@ export interface Budget {
   month: string; // YYYY-MM format
 }
 
+export interface IncomeSource {
+  id: string;
+  name: string;           // Ex: "Salário CLT", "Freela", "Dividendos"
+  amount: number;         // Valor mensal
+  frequency: 'monthly' | 'weekly' | 'biweekly' | 'annually';
+  dayOfPayment?: number;  // Dia do mês do pagamento
+  isActive: boolean;
+  category: string;       // Categoria para transações
+}
+
 export interface AppNotification {
   id: string;
   type: 'bill_due' | 'budget_warning' | 'goal_reminder' | 'achievement' | 'info';

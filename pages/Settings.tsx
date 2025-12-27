@@ -42,6 +42,23 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
     const [newExpenseName, setNewExpenseName] = useState('');
     const [newExpenseAmount, setNewExpenseAmount] = useState('');
 
+    // Income sources
+    const [incomeSources, setIncomeSources] = useState<{ id: string; name: string; amount: number; frequency: string }[]>(() => {
+        const stored = localStorage.getItem('reynar_income_sources');
+        if (stored) return JSON.parse(stored);
+        // Migrate existing salary if present
+        const existingSalary = localStorage.getItem('reynar_user_salary');
+        if (existingSalary && parseFloat(existingSalary) > 0) {
+            const migrated = [{ id: '1', name: 'Salário', amount: parseFloat(existingSalary), frequency: 'monthly' }];
+            localStorage.setItem('reynar_income_sources', JSON.stringify(migrated));
+            return migrated;
+        }
+        return [];
+    });
+    const [showAddIncome, setShowAddIncome] = useState(false);
+    const [newIncomeName, setNewIncomeName] = useState('');
+    const [newIncomeAmount, setNewIncomeAmount] = useState('');
+
     const handlePhotoClick = () => {
         fileInputRef.current?.click();
     };
@@ -67,6 +84,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
         localStorage.setItem('reynar_user_salary', salary);
         localStorage.setItem('finnova_spending_limit', spendingLimit);
         localStorage.setItem('reynar_fixed_expenses', JSON.stringify(fixedExpenses));
+        localStorage.setItem('reynar_income_sources', JSON.stringify(incomeSources));
 
         triggerCoinExplosion(window.innerWidth / 2, window.innerHeight / 2);
         setShowSuccess(true);
@@ -93,6 +111,37 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
         const updated = fixedExpenses.filter(e => e.id !== id);
         setFixedExpenses(updated);
         localStorage.setItem('reynar_fixed_expenses', JSON.stringify(updated));
+    };
+
+    const handleAddIncomeSource = () => {
+        if (newIncomeName && newIncomeAmount) {
+            const newIncome = {
+                id: Math.random().toString(),
+                name: newIncomeName,
+                amount: parseFloat(newIncomeAmount),
+                frequency: 'monthly'
+            };
+            const updated = [...incomeSources, newIncome];
+            setIncomeSources(updated);
+            localStorage.setItem('reynar_income_sources', JSON.stringify(updated));
+            // Also update legacy salary field for backwards compatibility
+            const totalIncome = updated.reduce((acc, s) => acc + s.amount, 0);
+            localStorage.setItem('reynar_user_salary', totalIncome.toString());
+            setSalary(totalIncome.toString());
+            setNewIncomeName('');
+            setNewIncomeAmount('');
+            setShowAddIncome(false);
+        }
+    };
+
+    const handleRemoveIncomeSource = (id: string) => {
+        const updated = incomeSources.filter(s => s.id !== id);
+        setIncomeSources(updated);
+        localStorage.setItem('reynar_income_sources', JSON.stringify(updated));
+        // Update legacy salary field
+        const totalIncome = updated.reduce((acc, s) => acc + s.amount, 0);
+        localStorage.setItem('reynar_user_salary', totalIncome.toString());
+        setSalary(totalIncome.toString());
     };
 
     const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -298,18 +347,70 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             </Card>
 
             {/* Budget Control */}
+            {/* Income Sources */}
+            <Card>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-lg text-white flex items-center gap-2">
+                        <Target size={20} className="text-secondary" /> Fontes de Renda
+                    </h3>
+                    <button
+                        onClick={() => setShowAddIncome(true)}
+                        className="p-2 rounded-lg bg-surfaceHighlight text-textMuted hover:text-white hover:bg-secondary transition-colors"
+                    >
+                        <Plus size={18} />
+                    </button>
+                </div>
+
+                {incomeSources.length === 0 ? (
+                    <div className="text-center py-6 text-textMuted">
+                        <Target size={28} className="mx-auto mb-2 opacity-30" />
+                        <p className="text-sm">Nenhuma fonte de renda cadastrada</p>
+                        <button
+                            onClick={() => setShowAddIncome(true)}
+                            className="text-secondary text-sm mt-2 hover:underline"
+                        >
+                            + Adicionar primeira
+                        </button>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {incomeSources.map(source => (
+                            <div key={source.id} className="flex items-center justify-between p-3 bg-surfaceHighlight rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center">
+                                        <Target size={14} className="text-secondary" />
+                                    </div>
+                                    <span className="text-sm text-white">{source.name}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-secondary font-semibold text-sm">
+                                        +{formatCurrency(source.amount)}
+                                    </span>
+                                    <button
+                                        onClick={() => handleRemoveIncomeSource(source.id)}
+                                        className="p-1 text-textMuted hover:text-danger transition-colors"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        <div className="flex justify-between items-center pt-2 border-t border-surfaceHighlight">
+                            <span className="text-sm text-textMuted">Renda Total Mensal:</span>
+                            <span className="font-bold text-secondary">
+                                {formatCurrency(incomeSources.reduce((acc, s) => acc + s.amount, 0))}
+                            </span>
+                        </div>
+                    </div>
+                )}
+            </Card>
+
+            {/* Budget Control */}
             <Card>
                 <h3 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
-                    <Target size={20} className="text-amber-500" /> {t('settings.income')}
+                    <Shield size={20} className="text-amber-500" /> {t('settings.income')}
                 </h3>
                 <div className="space-y-4">
-                    <Input
-                        label="Salário Mensal Base (R$)"
-                        type="number"
-                        value={salary}
-                        onChange={(e) => setSalary(e.target.value)}
-                        placeholder="0,00"
-                    />
                     <div>
                         <div className="flex justify-between items-center mb-2">
                             <label className="text-sm text-textMuted">Limite de Gastos</label>
@@ -403,6 +504,39 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                             />
                             <Button onClick={handleAddFixedExpense}>
                                 <Plus size={18} /> {t('settings.addFixedExpense')}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Income Source Modal */}
+            {showAddIncome && (
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4">
+                    <div className="bg-surface w-full max-w-sm rounded-t-2xl md:rounded-2xl border border-surfaceHighlight shadow-2xl animate-slide-up">
+                        <div className="p-4 border-b border-surfaceHighlight flex justify-between items-center">
+                            <h3 className="font-bold text-white">Adicionar Fonte de Renda</h3>
+                            <button onClick={() => setShowAddIncome(false)} className="text-textMuted hover:text-white">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-4 space-y-4">
+                            <Input
+                                label="Nome da Fonte"
+                                placeholder="Ex: Salário, Freela, Dividendos..."
+                                value={newIncomeName}
+                                onChange={e => setNewIncomeName(e.target.value)}
+                            />
+                            <Input
+                                label="Valor Mensal (R$)"
+                                type="number"
+                                placeholder="0,00"
+                                value={newIncomeAmount}
+                                onChange={e => setNewIncomeAmount(e.target.value)}
+                                isCurrency
+                            />
+                            <Button onClick={handleAddIncomeSource}>
+                                <Plus size={18} /> Adicionar Renda
                             </Button>
                         </div>
                     </div>
