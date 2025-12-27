@@ -332,10 +332,8 @@ const Goals: React.FC = () => {
                     {goals.length === 0 ? (
                         <div className="text-center py-8">
                             <Target size={40} className="mx-auto mb-3 text-textMuted opacity-30" />
-                            <p className="text-textMuted text-sm mb-3">Nenhuma meta criada ainda</p>
-                            <Button className="!w-auto px-4 py-2" onClick={() => setIsAddModalOpen(true)}>
-                                <Plus size={16} /> Criar Primeira Meta
-                            </Button>
+                            <p className="text-textMuted text-sm">Nenhuma meta criada ainda</p>
+                            <p className="text-textMuted text-xs mt-1">Use o botão + acima para começar</p>
                         </div>
                     ) : (
                         <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
