@@ -88,7 +88,7 @@ const Landing: React.FC = () => {
                             Entrar
                         </button>
                         <Button
-                            onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                            onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                             className="!w-auto px-4 md:px-5 py-2 h-9 text-xs"
                         >
                             Começar Agora
