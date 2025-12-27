@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, AreaChart, Area } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, TrendingUp, Calendar, AlertTriangle, ChevronRight, Eye, EyeOff, Trophy, Target, AlertCircle, X, Zap, Star, Lock, BarChart3, Activity } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, TrendingUp, Calendar, AlertTriangle, ChevronRight, Eye, EyeOff, Trophy, Target, AlertCircle, X, Zap, Star, Lock, BarChart3, Activity, Settings } from 'lucide-react';
 import { Card, Badge, triggerCoinExplosion } from '../components/UI';
 import { NOBILITY_TITLES } from '../services/mockData';
 import { useGamification } from '../context/GamificationContext';
@@ -43,6 +43,18 @@ const Dashboard: React.FC = () => {
 
     // Privacy State
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+
+    // Income Sources from Settings
+    const [incomeSources, setIncomeSources] = useState<{ id: string; name: string; amount: number; frequency: string }[]>([]);
+
+    useEffect(() => {
+        const stored = localStorage.getItem('reynar_income_sources');
+        if (stored) {
+            setIncomeSources(JSON.parse(stored));
+        }
+    }, []);
+
+    const totalMonthlyIncome = incomeSources.reduce((acc, s) => acc + s.amount, 0);
 
     // User Data State - prefer nickname, then auth user, then localStorage, then default
     const getUserName = () => {
@@ -393,6 +405,36 @@ const Dashboard: React.FC = () => {
                             </div>
                             <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">{t('dashboard.income')}</p>
                             <h3 className="text-2xl font-bold text-white mt-1 tracking-tight">{formatCurrency(totalIncome)}</h3>
+                        </Card>
+                    </div>
+
+                    {/* Income Sources Card */}
+                    <div className="snap-center shrink-0 w-[85%] md:w-auto">
+                        <Card
+                            className="h-full cursor-pointer hover:border-secondary/50 transition-all group"
+                            onClick={() => navigate(AppRoutes.SETTINGS)}
+                        >
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20">
+                                    <Target size={22} />
+                                </div>
+                                {incomeSources.length > 0 && (
+                                    <span className="text-[10px] text-textMuted bg-surfaceHighlight px-2 py-0.5 rounded-full">
+                                        {incomeSources.length} {incomeSources.length === 1 ? 'fonte' : 'fontes'}
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-textMuted text-xs uppercase tracking-wider font-semibold">Fontes de Renda</p>
+                            {incomeSources.length === 0 ? (
+                                <p className="text-sm text-textMuted mt-2 group-hover:text-secondary transition-colors">
+                                    + Adicionar renda
+                                </p>
+                            ) : (
+                                <h3 className="text-2xl font-bold text-emerald-400 mt-1 tracking-tight">
+                                    {formatCurrency(totalMonthlyIncome)}
+                                    <span className="text-xs font-normal text-textMuted">/mês</span>
+                                </h3>
+                            )}
                         </Card>
                     </div>
 
