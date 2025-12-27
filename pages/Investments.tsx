@@ -292,7 +292,10 @@ const Investments: React.FC = () => {
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
     // Fetch real quotes from BRAPI
-    const handleUpdateQuotes = async () => {
+    // Track if we've already auto-fetched quotes to prevent loop
+    const hasFetchedQuotesRef = useRef(false);
+
+    const handleUpdateQuotes = async (isManual: boolean = false) => {
         setIsLoadingQuotes(true);
 
         try {
@@ -347,13 +350,13 @@ const Investments: React.FC = () => {
             // Update local state immediately
             setInvestments(newInvestments);
 
-            // Also persist to database
-            if (updatedInvestments.length > 0) {
+            // Only persist to database and give XP on manual updates (to avoid loop)
+            if (isManual && updatedInvestments.length > 0) {
                 await updateInvestmentValues(updatedInvestments);
+                addXp(10); // Reward for checking real market data
             }
 
             setLastUpdated(new Date());
-            addXp(10); // Reward for checking real market data
         } catch (error) {
             console.error('Error fetching quotes:', error);
         } finally {
@@ -361,13 +364,15 @@ const Investments: React.FC = () => {
         }
     };
 
-    // Auto-fetch quotes on mount if there are stock investments
+    // Auto-fetch quotes on mount if there are stock investments (only once)
     useEffect(() => {
+        if (hasFetchedQuotesRef.current) return;
         const hasStocks = investments.some(inv => inv.type === 'Ações' || inv.type === 'FIIs');
         if (hasStocks && investments.length > 0) {
-            handleUpdateQuotes();
+            hasFetchedQuotesRef.current = true;
+            handleUpdateQuotes(false); // false = auto fetch, no XP
         }
-    }, [dbInvestments]); // Refetch when db investments change
+    }, [investments.length]); // Only run when investments are loaded
 
     // Fetch popular stocks for the carousel
     const fetchMarketQuotes = async () => {
@@ -435,7 +440,7 @@ const Investments: React.FC = () => {
                     <Button
                         variant="secondary"
                         className="!w-auto px-4 py-2 bg-surface border border-surfaceHighlight hover:bg-surfaceHighlight text-textMuted hover:text-white"
-                        onClick={handleUpdateQuotes}
+                        onClick={() => handleUpdateQuotes(true)}
                         isLoading={isLoadingQuotes}
                     >
                         <RefreshCw size={18} className={isLoadingQuotes ? 'animate-spin' : ''} />
