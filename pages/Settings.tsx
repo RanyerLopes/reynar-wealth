@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Shield, LogOut, Save, CreditCard, Sparkles, Target, UploadCloud, DownloadCloud, FileSpreadsheet, Check, Camera, Crown, Receipt, Plus, Trash2, X, CheckCircle } from 'lucide-react';
+import { User, Shield, LogOut, Save, CreditCard, Sparkles, Target, UploadCloud, DownloadCloud, FileSpreadsheet, Check, Camera, Crown, Receipt, Plus, Trash2, X, CheckCircle, HelpCircle, PlayCircle } from 'lucide-react';
 import { Card, Button, Input, triggerCoinExplosion } from '../components/UI';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useOnboarding } from '../components/Onboarding';
 
 interface SettingsProps {
     onLogout?: () => void;
@@ -15,6 +16,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { t, formatCurrency } = useLanguage();
+    const { resetOnboarding } = useOnboarding();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // User data
@@ -460,6 +462,30 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                             <DownloadCloud size={20} />
                         </div>
                         <p className="font-bold text-white text-xs">Backup</p>
+                    </button>
+                </div>
+            </Card>
+
+            {/* Help Section */}
+            <Card>
+                <h3 className="flex items-center gap-2 font-bold text-white mb-4">
+                    <HelpCircle size={18} className="text-primary" /> Ajuda
+                </h3>
+                <div className="space-y-3">
+                    <button
+                        onClick={() => {
+                            resetOnboarding();
+                            navigate(AppRoutes.DASHBOARD);
+                        }}
+                        className="w-full flex items-center gap-3 p-4 bg-surfaceHighlight/50 border border-surfaceHighlight rounded-xl hover:border-primary/50 transition-all text-left"
+                    >
+                        <div className="p-2 rounded-full bg-primary/10">
+                            <PlayCircle size={20} className="text-primary" />
+                        </div>
+                        <div>
+                            <p className="font-medium text-white">Rever Tutorial</p>
+                            <p className="text-xs text-textMuted">Reveja o guia de introdução do app</p>
+                        </div>
                     </button>
                 </div>
             </Card>
