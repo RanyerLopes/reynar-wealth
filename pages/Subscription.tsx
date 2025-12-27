@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Button } from '../components/UI';
 import { AppRoutes } from '../types';
 import {
-    Crown, Star, Shield, CreditCard, Calendar, Clock,
-    AlertTriangle, Check, ArrowRight, RefreshCcw, X, Sparkles
+    Crown, Star, Shield, CreditCard,
+    AlertTriangle, ArrowRight, RefreshCcw, X, Sparkles
 } from 'lucide-react';
 import { useSubscription } from '../context/SubscriptionContext';
 
@@ -22,20 +22,11 @@ const Subscription: React.FC = () => {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelling, setCancelling] = useState(false);
 
-    // Mock data for subscription details
-    const subscriptionData = {
-        nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        lastPayment: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-        cardLast4: '4242',
-        cardBrand: 'Visa',
-        monthlyPrice: isPro ? 29.90 : isPlus ? 14.90 : 0,
-    };
+    // Note: In production, this would come from Stripe API
+    // For now, we show a message that checkout is simulated
+    const hasRealPaymentMethod = false; // Would come from Stripe in production
 
-    const paymentHistory = [
-        { date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), amount: subscriptionData.monthlyPrice, status: 'paid' },
-        { date: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000), amount: subscriptionData.monthlyPrice, status: 'paid' },
-        { date: new Date(Date.now() - 66 * 24 * 60 * 60 * 1000), amount: subscriptionData.monthlyPrice, status: 'paid' },
-    ];
+    const monthlyPrice = isPro ? 29.90 : isPlus ? 14.90 : 0;
 
     const handleCancelSubscription = async () => {
         setCancelling(true);
@@ -97,7 +88,7 @@ const Subscription: React.FC = () => {
                     {!isFree && (
                         <div className="text-right">
                             <span className="text-2xl font-bold text-white">
-                                R$ {subscriptionData.monthlyPrice.toFixed(2)}
+                                R$ {monthlyPrice.toFixed(2)}
                             </span>
                             <span className="text-textMuted text-sm">/mês</span>
                         </div>
@@ -141,7 +132,7 @@ const Subscription: React.FC = () => {
                 </div>
             </Card>
 
-            {/* Payment Method */}
+            {/* Payment Method - Only show if user has real payment method */}
             {(isPlus || isPro) && (
                 <Card>
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -149,60 +140,40 @@ const Subscription: React.FC = () => {
                         Forma de Pagamento
                     </h3>
 
-                    <div className="flex items-center justify-between p-4 bg-surfaceHighlight rounded-xl">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-8 bg-white/10 rounded flex items-center justify-center">
-                                <CreditCard size={18} className="text-white" />
+                    {hasRealPaymentMethod ? (
+                        <div className="flex items-center justify-between p-4 bg-surfaceHighlight rounded-xl">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-8 bg-white/10 rounded flex items-center justify-center">
+                                    <CreditCard size={18} className="text-white" />
+                                </div>
+                                <div>
+                                    <p className="text-white font-medium">Visa •••• 4242</p>
+                                    <p className="text-xs text-textMuted">Expira 12/28</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-white font-medium">{subscriptionData.cardBrand} •••• {subscriptionData.cardLast4}</p>
-                                <p className="text-xs text-textMuted">Expira 12/28</p>
+                            <Button variant="ghost" className="!w-auto text-sm">
+                                <RefreshCcw size={14} /> Alterar
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                            <div className="flex items-start gap-3">
+                                <AlertTriangle size={20} className="text-amber-400 mt-0.5" />
+                                <div>
+                                    <p className="text-amber-200 font-medium mb-1">Modo de Demonstração</p>
+                                    <p className="text-sm text-amber-200/70">
+                                        Este é um ambiente de teste. Nenhum pagamento real foi processado.
+                                        Em produção, aqui aparecerá seu cartão cadastrado via Stripe.
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <Button variant="ghost" className="!w-auto text-sm">
-                            <RefreshCcw size={14} /> Alterar
-                        </Button>
-                    </div>
-
-                    {/* Next Billing */}
-                    <div className="mt-4 flex items-center gap-3 text-sm">
-                        <Calendar size={16} className="text-textMuted" />
-                        <span className="text-textMuted">Próxima cobrança:</span>
-                        <span className="text-white font-medium">{formatDate(subscriptionData.nextBillingDate)}</span>
-                    </div>
+                    )}
                 </Card>
             )}
 
-            {/* Payment History */}
-            {(isPlus || isPro) && (
-                <Card>
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <Clock size={18} className="text-primary" />
-                        Histórico de Pagamentos
-                    </h3>
-
-                    <div className="space-y-3">
-                        {paymentHistory.map((payment, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-surfaceHighlight rounded-xl">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">
-                                        <Check size={14} className="text-secondary" />
-                                    </div>
-                                    <div>
-                                        <p className="text-white text-sm font-medium">
-                                            R$ {payment.amount.toFixed(2)}
-                                        </p>
-                                        <p className="text-xs text-textMuted">{formatDate(payment.date)}</p>
-                                    </div>
-                                </div>
-                                <span className="text-xs bg-secondary/20 text-secondary px-2 py-1 rounded-full">
-                                    Pago
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-            )}
+            {/* Payment History - Hidden in demo mode */}
+            {/* In production, this would show real Stripe payment history */}
 
             {/* Free Plan Info */}
             {isFree && !isTrial && (
