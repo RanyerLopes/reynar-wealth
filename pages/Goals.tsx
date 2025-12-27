@@ -356,16 +356,6 @@ const Goals: React.FC = () => {
                         </Card>
                     );
                 })}
-
-                <button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="border-2 border-dashed border-surfaceHighlight rounded-2xl flex flex-col items-center justify-center min-h-[250px] text-textMuted hover:border-primary hover:text-primary transition-all gap-3 bg-surface/30"
-                >
-                    <div className="p-4 rounded-full bg-surfaceHighlight group-hover:bg-primary/20 transition-colors">
-                        <Plus size={24} />
-                    </div>
-                    <span className="font-medium">{t('goals.newGoal')}</span>
-                </button>
             </div>
 
             {/* Modal: Create Goal */}

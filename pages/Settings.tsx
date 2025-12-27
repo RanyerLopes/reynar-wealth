@@ -465,15 +465,8 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             </Card>
 
             <div className="flex gap-4 pt-4">
-                <Button variant="secondary" onClick={handleSave}>
+                <Button variant="secondary" onClick={handleSave} className="flex-1">
                     <Save size={18} /> {t('settings.save')}
-                </Button>
-                <Button
-                    variant="danger"
-                    className="bg-danger/10 text-danger border border-danger/20 hover:bg-danger hover:text-white"
-                    onClick={onLogout}
-                >
-                    <LogOut size={18} /> {t('settings.logout')}
                 </Button>
             </div>
 
