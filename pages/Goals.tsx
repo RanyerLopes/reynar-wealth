@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Target, Plus, ChevronRight, Trophy, X, TrendingUp, Wallet, CheckCircle, FileText, Calendar, ArrowUpRight, StickyNote, Save, Trash2 } from 'lucide-react';
+import { Target, Plus, ChevronRight, ChevronLeft, Trophy, X, TrendingUp, Wallet, CheckCircle, FileText, Calendar, ArrowUpRight, StickyNote, Save, Trash2 } from 'lucide-react';
 import { Card, Button, Input, triggerCoinExplosion } from '../components/UI';
 import { Goal, GoalTransaction } from '../types';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameMonth, isSameDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useGamification } from '../context/GamificationContext';
 import { AIConsultant } from '../components/AIConsultant';
 import { useGoals } from '../hooks/useDatabase';
@@ -37,7 +38,25 @@ const Goals: React.FC = () => {
 
     const [editingNotes, setEditingNotes] = useState('');
 
+    // Calendar state
+    const [calendarMonth, setCalendarMonth] = useState(new Date());
+
     const totalSaved = goals.reduce((acc, g) => acc + g.currentAmount, 0);
+
+    // Calendar helper functions
+    const getDaysInMonth = () => {
+        const start = startOfMonth(calendarMonth);
+        const end = endOfMonth(calendarMonth);
+        return eachDayOfInterval({ start, end });
+    };
+
+    const getGoalsForDay = (day: Date) => {
+        return goals.filter(g => isSameDay(new Date(g.deadline), day));
+    };
+
+    const getGoalsForMonth = () => {
+        return goals.filter(g => isSameMonth(new Date(g.deadline), calendarMonth));
+    };
 
     const handleAddGoal = (e: React.FormEvent) => {
         e.preventDefault();
@@ -174,6 +193,107 @@ const Goals: React.FC = () => {
                 <h3 className="text-4xl font-bold text-white mb-2">{formatCurrency(totalSaved)}</h3>
                 <p className="text-white/80 text-sm max-w-md">{t('goals.buildingFuture')}</p>
             </div>
+
+            {/* Calendar Section */}
+            <Card className="overflow-hidden">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-lg text-white flex items-center gap-2">
+                        <Calendar size={20} className="text-primary" />
+                        Calendário de Metas
+                    </h3>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
+                            className="p-2 rounded-lg bg-surfaceHighlight text-textMuted hover:text-white hover:bg-primary/20 transition-colors"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        <span className="text-sm font-semibold text-white min-w-[140px] text-center">
+                            {format(calendarMonth, 'MMMM yyyy', { locale: ptBR })}
+                        </span>
+                        <button
+                            onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
+                            className="p-2 rounded-lg bg-surfaceHighlight text-textMuted hover:text-white hover:bg-primary/20 transition-colors"
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-1 mb-4">
+                    {/* Day headers */}
+                    {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
+                        <div key={day} className="text-center text-xs text-textMuted font-medium py-2">
+                            {day}
+                        </div>
+                    ))}
+
+                    {/* Empty cells for days before month start */}
+                    {Array.from({ length: getDay(startOfMonth(calendarMonth)) }).map((_, i) => (
+                        <div key={`empty-${i}`} className="aspect-square"></div>
+                    ))}
+
+                    {/* Days of month */}
+                    {getDaysInMonth().map(day => {
+                        const dayGoals = getGoalsForDay(day);
+                        const hasGoals = dayGoals.length > 0;
+                        const isToday = isSameDay(day, new Date());
+
+                        return (
+                            <div
+                                key={day.toISOString()}
+                                className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-all relative
+                                    ${hasGoals ? 'bg-primary/20 text-primary font-bold cursor-pointer hover:bg-primary/30' : 'text-textMuted hover:bg-surfaceHighlight'}
+                                    ${isToday ? 'ring-2 ring-secondary' : ''}
+                                `}
+                                onClick={() => hasGoals && openDetailModal(dayGoals[0])}
+                                title={hasGoals ? dayGoals.map(g => g.name).join(', ') : ''}
+                            >
+                                {format(day, 'd')}
+                                {hasGoals && (
+                                    <div className="absolute bottom-1 flex gap-0.5">
+                                        {dayGoals.slice(0, 3).map((_, i) => (
+                                            <div key={i} className="w-1 h-1 rounded-full bg-primary"></div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Goals for this month */}
+                {getGoalsForMonth().length > 0 && (
+                    <div className="border-t border-surfaceHighlight pt-4">
+                        <p className="text-xs text-textMuted mb-2 uppercase tracking-wider font-semibold">
+                            Metas deste mês ({getGoalsForMonth().length})
+                        </p>
+                        <div className="space-y-2">
+                            {getGoalsForMonth().map(goal => (
+                                <div
+                                    key={goal.id}
+                                    onClick={() => openDetailModal(goal)}
+                                    className="flex items-center justify-between p-3 bg-surfaceHighlight rounded-xl cursor-pointer hover:border-primary border border-transparent transition-all"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xl">{goal.icon}</span>
+                                        <div>
+                                            <p className="text-sm font-medium text-white">{goal.name}</p>
+                                            <p className="text-xs text-textMuted">
+                                                Vence em {format(new Date(goal.deadline), 'dd/MM/yyyy')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className="text-sm font-semibold text-primary">
+                                        {formatCurrency(goal.targetAmount)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </Card>
 
             {/* Goals Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
