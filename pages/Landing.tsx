@@ -912,7 +912,7 @@ const Landing: React.FC = () => {
                                 <Button
                                     variant="secondary"
                                     className="w-full h-12"
-                                    onClick={handleRegister}
+                                    onClick={() => navigate(`${AppRoutes.CHECKOUT}?plan=plus`)}
                                 >
                                     Assinar Plus <ArrowRight size={16} />
                                 </Button>
@@ -949,7 +949,7 @@ const Landing: React.FC = () => {
 
                                 <Button
                                     className="w-full h-12 bg-amber-400 hover:bg-amber-500 text-black font-bold border-none shadow-lg shadow-amber-400/20"
-                                    onClick={handleRegister}
+                                    onClick={() => navigate(`${AppRoutes.CHECKOUT}?plan=pro`)}
                                 >
                                     Assinar Pro 👑
                                 </Button>
