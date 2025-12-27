@@ -208,7 +208,7 @@ const Goals: React.FC = () => {
                         >
                             <ChevronLeft size={18} />
                         </button>
-                        <span className="text-sm font-semibold text-white min-w-[140px] text-center">
+                        <span className="text-sm font-semibold text-white min-w-[140px] text-center capitalize">
                             {format(calendarMonth, 'MMMM yyyy', { locale: ptBR })}
                         </span>
                         <button
@@ -217,6 +217,26 @@ const Goals: React.FC = () => {
                         >
                             <ChevronRight size={18} />
                         </button>
+                    </div>
+                </div>
+
+                {/* Legend */}
+                <div className="flex flex-wrap items-center gap-4 mb-4 p-3 bg-surfaceHighlight/30 rounded-xl text-xs">
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full ring-2 ring-secondary"></div>
+                        <span className="text-textMuted">Hoje</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-danger"></div>
+                        <span className="text-textMuted">Urgente (≤7 dias)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <span className="text-textMuted">Próximo (≤30 dias)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-primary"></div>
+                        <span className="text-textMuted">Meta marcada</span>
                     </div>
                 </div>
 
@@ -240,21 +260,55 @@ const Goals: React.FC = () => {
                         const hasGoals = dayGoals.length > 0;
                         const isToday = isSameDay(day, new Date());
 
+                        // Calculate urgency based on days until deadline
+                        const daysUntil = Math.ceil((day.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                        const isUrgent = hasGoals && daysUntil >= 0 && daysUntil <= 7;
+                        const isNear = hasGoals && daysUntil > 7 && daysUntil <= 30;
+
+                        // Get progress for tooltip
+                        const goalProgress = hasGoals ? dayGoals.map(g => {
+                            const pct = Math.min((g.currentAmount / g.targetAmount) * 100, 100).toFixed(0);
+                            return `${g.icon} ${g.name} (${pct}%)`;
+                        }).join('\n') : '';
+
                         return (
                             <div
                                 key={day.toISOString()}
-                                className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-all relative
-                                    ${hasGoals ? 'bg-primary/20 text-primary font-bold cursor-pointer hover:bg-primary/30' : 'text-textMuted hover:bg-surfaceHighlight'}
+                                className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-all relative group
+                                    ${isUrgent ? 'bg-danger/20 text-danger font-bold cursor-pointer hover:bg-danger/30' :
+                                        isNear ? 'bg-amber-500/20 text-amber-400 font-bold cursor-pointer hover:bg-amber-500/30' :
+                                            hasGoals ? 'bg-primary/20 text-primary font-bold cursor-pointer hover:bg-primary/30' :
+                                                'text-textMuted hover:bg-surfaceHighlight'}
                                     ${isToday ? 'ring-2 ring-secondary' : ''}
                                 `}
                                 onClick={() => hasGoals && openDetailModal(dayGoals[0])}
-                                title={hasGoals ? dayGoals.map(g => g.name).join(', ') : ''}
+                                title={goalProgress}
                             >
                                 {format(day, 'd')}
                                 {hasGoals && (
                                     <div className="absolute bottom-1 flex gap-0.5">
-                                        {dayGoals.slice(0, 3).map((_, i) => (
-                                            <div key={i} className="w-1 h-1 rounded-full bg-primary"></div>
+                                        {dayGoals.slice(0, 3).map((g, i) => (
+                                            <div
+                                                key={i}
+                                                className={`w-1.5 h-1.5 rounded-full ${isUrgent ? 'bg-danger' :
+                                                        isNear ? 'bg-amber-500' : 'bg-primary'
+                                                    }`}
+                                            ></div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Hover tooltip for desktop */}
+                                {hasGoals && (
+                                    <div className="hidden group-hover:block absolute z-20 bottom-full mb-2 left-1/2 -translate-x-1/2 bg-surface border border-surfaceHighlight rounded-lg p-2 shadow-xl whitespace-nowrap text-xs">
+                                        {dayGoals.map(g => (
+                                            <div key={g.id} className="flex items-center gap-2 py-0.5">
+                                                <span>{g.icon}</span>
+                                                <span className="text-white">{g.name}</span>
+                                                <span className="text-textMuted">
+                                                    {Math.min((g.currentAmount / g.targetAmount) * 100, 100).toFixed(0)}%
+                                                </span>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
@@ -263,34 +317,56 @@ const Goals: React.FC = () => {
                     })}
                 </div>
 
-                {/* Goals for this month */}
-                {getGoalsForMonth().length > 0 && (
+                {/* Goals for this month OR empty state */}
+                {getGoalsForMonth().length > 0 ? (
                     <div className="border-t border-surfaceHighlight pt-4">
                         <p className="text-xs text-textMuted mb-2 uppercase tracking-wider font-semibold">
                             Metas deste mês ({getGoalsForMonth().length})
                         </p>
                         <div className="space-y-2">
-                            {getGoalsForMonth().map(goal => (
-                                <div
-                                    key={goal.id}
-                                    onClick={() => openDetailModal(goal)}
-                                    className="flex items-center justify-between p-3 bg-surfaceHighlight rounded-xl cursor-pointer hover:border-primary border border-transparent transition-all"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xl">{goal.icon}</span>
-                                        <div>
-                                            <p className="text-sm font-medium text-white">{goal.name}</p>
-                                            <p className="text-xs text-textMuted">
-                                                Vence em {format(new Date(goal.deadline), 'dd/MM/yyyy')}
-                                            </p>
+                            {getGoalsForMonth().map(goal => {
+                                const daysUntil = Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                                const isUrgent = daysUntil >= 0 && daysUntil <= 7;
+                                const isNear = daysUntil > 7 && daysUntil <= 30;
+                                const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+
+                                return (
+                                    <div
+                                        key={goal.id}
+                                        onClick={() => openDetailModal(goal)}
+                                        className={`flex items-center justify-between p-3 rounded-xl cursor-pointer border transition-all
+                                            ${isUrgent ? 'bg-danger/10 border-danger/30 hover:border-danger' :
+                                                isNear ? 'bg-amber-500/10 border-amber-500/30 hover:border-amber-500' :
+                                                    'bg-surfaceHighlight border-transparent hover:border-primary'}
+                                        `}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xl">{goal.icon}</span>
+                                            <div>
+                                                <p className="text-sm font-medium text-white flex items-center gap-2">
+                                                    {goal.name}
+                                                    {isUrgent && <span className="text-[10px] bg-danger/20 text-danger px-1.5 py-0.5 rounded">URGENTE</span>}
+                                                </p>
+                                                <p className="text-xs text-textMuted">
+                                                    Vence em {format(new Date(goal.deadline), 'dd/MM')} • {progress.toFixed(0)}% concluído
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={`text-sm font-semibold ${isUrgent ? 'text-danger' : isNear ? 'text-amber-400' : 'text-primary'}`}>
+                                                {formatCurrency(goal.targetAmount)}
+                                            </span>
                                         </div>
                                     </div>
-                                    <span className="text-sm font-semibold text-primary">
-                                        {formatCurrency(goal.targetAmount)}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
+                    </div>
+                ) : (
+                    <div className="border-t border-surfaceHighlight pt-6 pb-2 text-center">
+                        <Calendar size={32} className="mx-auto mb-2 text-textMuted opacity-30" />
+                        <p className="text-textMuted text-sm">Nenhuma meta vence neste mês</p>
+                        <p className="text-xs text-textMuted mt-1">Use os botões ◀ ▶ para navegar</p>
                     </div>
                 )}
             </Card>
