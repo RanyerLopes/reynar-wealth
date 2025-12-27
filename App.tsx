@@ -208,6 +208,9 @@ const AppLayout: React.FC = () => {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path={AppRoutes.LOGIN} element={<Login />} />
+            <Route path={AppRoutes.PRICING} element={<Pricing />} />
+            <Route path={AppRoutes.CHECKOUT} element={<Checkout />} />
+            <Route path={AppRoutes.CHECKOUT_SUCCESS} element={<CheckoutSuccess />} />
             <Route path="*" element={<Navigate to={AppRoutes.LOGIN} replace />} />
           </Routes>
         </div>
