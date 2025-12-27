@@ -265,13 +265,19 @@ const Investments: React.FC = () => {
 
         const pricePerUnit = newQuantity && newQuantity > 0 ? newAmountInvested / newQuantity : undefined;
 
+        const updates = {
+            quantity: newQuantity,
+            amountInvested: newAmountInvested,
+            currentValue: newAmountInvested,
+            purchasePrice: pricePerUnit
+        };
+
         try {
-            await editInvestmentInDb(editingAsset.id, {
-                quantity: newQuantity,
-                amountInvested: newAmountInvested,
-                currentValue: newAmountInvested, // Update current value to match new invested amount
-                purchasePrice: pricePerUnit
-            });
+            await editInvestmentInDb(editingAsset.id, updates);
+            // Also update local state immediately to reflect changes in UI
+            setInvestments(prev => prev.map(inv =>
+                inv.id === editingAsset.id ? { ...inv, ...updates } : inv
+            ));
             setIsEditModalOpen(false);
             setEditingAsset(null);
             addXp(10); // Small reward for updating
@@ -311,21 +317,41 @@ const Investments: React.FC = () => {
             setStockQuotes(quotesMap);
 
             // Update investment values based on real quotes
-            const updatedInvestments = investments.map(inv => {
+            const updatedInvestments: { id: string; currentValue: number; performance: number }[] = [];
+
+            const newInvestments = investments.map(inv => {
                 const quote = quotesMap.get(inv.assetName.toUpperCase());
-                if (quote) {
-                    // Calculate new value based on current price
-                    // Assuming amountInvested represents total invested, calculate shares
-                    // For simplicity, use the quote change percent to update performance
+                if (quote && inv.quantity && inv.quantity > 0) {
+                    // Calculate new current value: quantity × current price
+                    const newCurrentValue = inv.quantity * quote.regularMarketPrice;
+                    // Calculate performance: (current - invested) / invested × 100
+                    const newPerformance = inv.amountInvested > 0
+                        ? ((newCurrentValue - inv.amountInvested) / inv.amountInvested) * 100
+                        : 0;
+
+                    updatedInvestments.push({
+                        id: inv.id,
+                        currentValue: newCurrentValue,
+                        performance: newPerformance
+                    });
+
                     return {
                         ...inv,
-                        performance: quote.regularMarketChangePercent
+                        currentValue: newCurrentValue,
+                        performance: newPerformance
                     };
                 }
                 return inv;
             });
 
-            setInvestments(updatedInvestments);
+            // Update local state immediately
+            setInvestments(newInvestments);
+
+            // Also persist to database
+            if (updatedInvestments.length > 0) {
+                await updateInvestmentValues(updatedInvestments);
+            }
+
             setLastUpdated(new Date());
             addXp(10); // Reward for checking real market data
         } catch (error) {
