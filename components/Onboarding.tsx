@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronRight, ChevronLeft, Sparkles, FileUp, Target, Wallet, CheckCircle, RocketIcon } from 'lucide-react';
+import {
+    X, ChevronRight, ChevronLeft, Sparkles, FileUp, Target, Wallet,
+    CheckCircle, RocketIcon, PieChart, TrendingUp, Receipt, Bot,
+    Lightbulb, Crown, Shield, Calendar, CreditCard, Camera
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
 import { Button } from './UI';
@@ -12,43 +16,114 @@ interface OnboardingState {
     skipped: boolean;
 }
 
+// Tutorial steps with detailed explanations
 const STEPS = [
     {
         title: 'Bem-vindo ao Reynar Wealth! 👑',
-        description: 'Seu novo parceiro para organizar suas finanças de forma inteligente e visual.',
+        subtitle: 'Seu assistente financeiro pessoal',
+        description: 'O Reynar Wealth vai te ajudar a organizar suas finanças de forma simples e visual. Você vai poder controlar seus gastos, criar metas e muito mais!',
+        tips: [
+            'Acompanhe para onde vai seu dinheiro',
+            'Crie metas e veja seu progresso',
+            'Receba dicas personalizadas da nossa IA'
+        ],
         icon: Sparkles,
         color: 'from-primary to-indigo-600',
         action: null,
     },
     {
-        title: 'Importe seu Extrato',
-        description: 'Conecte seus dados bancários importando extratos em PDF, Excel ou OFX.',
-        icon: FileUp,
-        color: 'from-green-500 to-emerald-600',
-        action: AppRoutes.TRANSACTIONS,
-        actionLabel: 'Ir para Transações',
+        title: '📊 Dashboard: Sua Visão Geral',
+        subtitle: 'Tudo num só lugar',
+        description: 'O Dashboard é sua página inicial. Aqui você vê um resumo de tudo: saldo, gastos do mês, metas e muito mais. É como um "painel de controle" das suas finanças.',
+        tips: [
+            'Veja quanto gastou vs quanto ganhou',
+            'Acompanhe suas metas principais',
+            'Gráficos mostram para onde vai seu dinheiro'
+        ],
+        icon: PieChart,
+        color: 'from-blue-500 to-cyan-600',
+        action: AppRoutes.DASHBOARD,
+        actionLabel: 'Ver Dashboard',
     },
     {
-        title: 'Defina seu Orçamento',
-        description: 'Estabeleça limites mensais por categoria para manter seus gastos sob controle.',
+        title: '💳 Transações: Registre seus Gastos',
+        subtitle: 'Anote tudo o que entra e sai',
+        description: 'Na página de Transações você registra o que gastou ou recebeu. Pode adicionar manualmente ou importar automaticamente do seu banco!',
+        tips: [
+            'Toque no + para adicionar gasto ou receita',
+            'Use a câmera para escanear comprovantes',
+            'Importe extratos do banco (PDF, CSV, OFX)'
+        ],
+        icon: Receipt,
+        color: 'from-green-500 to-emerald-600',
+        action: AppRoutes.TRANSACTIONS,
+        actionLabel: 'Ver Transações',
+    },
+    {
+        title: '📷 Escaneie Comprovantes',
+        subtitle: 'A câmera lê o valor pra você',
+        description: 'Tirou foto de um cupom fiscal? O Reynar usa inteligência artificial para ler automaticamente o valor, nome da loja e categoria. Muito mais rápido!',
+        tips: [
+            'Aponte a câmera para o cupom',
+            'A IA lê o valor automaticamente',
+            'Também pode fazer upload de uma foto da galeria'
+        ],
+        icon: Camera,
+        color: 'from-purple-500 to-violet-600',
+        action: null,
+    },
+    {
+        title: '💰 Orçamento: Controle seus Limites',
+        subtitle: 'Defina quanto pode gastar',
+        description: 'No Orçamento você define quanto quer gastar por categoria (alimentação, transporte, lazer...). O app avisa quando você está chegando no limite!',
+        tips: [
+            'Defina limites mensais por categoria',
+            'Veja barras de progresso coloridas',
+            'Vermelho = passou do limite!'
+        ],
         icon: Wallet,
         color: 'from-orange-500 to-amber-600',
         action: AppRoutes.BUDGET,
-        actionLabel: 'Criar Orçamento',
+        actionLabel: 'Ver Orçamento',
     },
     {
-        title: 'Crie sua Primeira Meta',
-        description: 'Defina objetivos financeiros e acompanhe seu progresso para conquistá-los.',
+        title: '🎯 Metas: Realize seus Sonhos',
+        subtitle: 'Poupe para objetivos específicos',
+        description: 'Quer comprar algo especial? Viajar? Criar um fundo de emergência? Crie uma Meta, defina o valor e acompanhe seu progresso até conquistar!',
+        tips: [
+            'Crie metas com nome, valor e prazo',
+            'Adicione dinheiro quando conseguir poupar',
+            'Calendário mostra quando cada meta vence'
+        ],
         icon: Target,
-        color: 'from-blue-500 to-cyan-600',
+        color: 'from-pink-500 to-rose-600',
         action: AppRoutes.GOALS,
-        actionLabel: 'Criar Meta',
+        actionLabel: 'Ver Metas',
     },
     {
-        title: 'Tudo Pronto! 🎉',
-        description: 'Você está pronto para começar. Explore o app e tome controle das suas finanças!',
+        title: '🤖 Consultor IA: Dicas Inteligentes',
+        subtitle: 'Um conselheiro financeiro no seu bolso',
+        description: 'O Consultor Reynar é uma inteligência artificial que analisa suas finanças e dá dicas personalizadas. Ele fala de um jeito divertido e fácil de entender!',
+        tips: [
+            'Pergunte onde está gastando muito',
+            'Peça sugestões de economia',
+            'Ele conhece seus dados e dá dicas certeiras'
+        ],
+        icon: Bot,
+        color: 'from-cyan-500 to-teal-600',
+        action: null,
+    },
+    {
+        title: '🚀 Pronto para Começar!',
+        subtitle: 'O controle está em suas mãos',
+        description: 'Você está pronto! Comece registrando seus gastos de hoje e veja a mágica acontecer. Em poucos dias você vai ter uma visão clara das suas finanças.',
+        tips: [
+            'Dica: Comece adicionando 3 gastos de hoje',
+            'Use diariamente para melhores resultados',
+            'Se tiver dúvidas, volte a este tutorial em Configurações'
+        ],
         icon: RocketIcon,
-        color: 'from-purple-500 to-pink-600',
+        color: 'from-amber-500 to-yellow-500',
         action: null,
     },
 ];
@@ -115,53 +190,93 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         }
     };
 
+    const goToStep = (idx: number) => {
+        setIsAnimating(true);
+        setTimeout(() => {
+            setCurrentStep(idx);
+            setIsAnimating(false);
+        }, 200);
+    };
+
     return (
-        <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-surface border border-surfaceHighlight rounded-3xl max-w-md w-full overflow-hidden shadow-2xl">
-                {/* Header with skip button */}
-                <div className="flex justify-between items-center p-4 border-b border-surfaceHighlight">
+        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+            <div className="bg-surface border border-surfaceHighlight rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl my-4">
+                {/* Header with progress */}
+                <div className="p-4 border-b border-surfaceHighlight">
+                    <div className="flex justify-between items-center mb-3">
+                        <span className="text-xs text-textMuted">
+                            Passo {currentStep + 1} de {STEPS.length}
+                        </span>
+                        <button
+                            onClick={handleSkip}
+                            className="text-textMuted hover:text-white text-sm flex items-center gap-1"
+                        >
+                            <X size={14} /> Pular tutorial
+                        </button>
+                    </div>
+
+                    {/* Progress bar with clickable steps */}
                     <div className="flex gap-1">
                         {STEPS.map((_, idx) => (
-                            <div
+                            <button
                                 key={idx}
-                                className={`h-1 w-8 rounded-full transition-all ${idx === currentStep
+                                onClick={() => goToStep(idx)}
+                                className={`h-1.5 flex-1 rounded-full transition-all ${idx === currentStep
                                         ? 'bg-primary'
                                         : idx < currentStep
                                             ? 'bg-primary/50'
-                                            : 'bg-surfaceHighlight'
+                                            : 'bg-surfaceHighlight hover:bg-surfaceHighlight/80'
                                     }`}
                             />
                         ))}
                     </div>
-                    <button
-                        onClick={handleSkip}
-                        className="text-textMuted hover:text-white text-sm"
-                    >
-                        Pular
-                    </button>
                 </div>
 
                 {/* Content */}
-                <div className={`p-8 text-center transition-opacity duration-200 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
-                    <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center mx-auto mb-6 shadow-lg`}>
+                <div className={`p-6 transition-opacity duration-200 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+                    {/* Icon */}
+                    <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center mx-auto mb-5 shadow-lg shadow-primary/20`}>
                         <step.icon size={40} className="text-white" />
                     </div>
 
-                    <h2 className="text-2xl font-bold text-white mb-3">{step.title}</h2>
-                    <p className="text-textMuted leading-relaxed mb-6">{step.description}</p>
+                    {/* Title & Subtitle */}
+                    <h2 className="text-xl font-bold text-white text-center mb-1">{step.title}</h2>
+                    <p className="text-sm text-primary text-center mb-4">{step.subtitle}</p>
 
+                    {/* Description */}
+                    <p className="text-textMuted text-sm leading-relaxed text-center mb-5">
+                        {step.description}
+                    </p>
+
+                    {/* Tips List */}
+                    <div className="bg-surfaceHighlight/50 rounded-xl p-4 mb-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Lightbulb size={16} className="text-amber-400" />
+                            <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Dicas</span>
+                        </div>
+                        <ul className="space-y-2">
+                            {step.tips.map((tip, idx) => (
+                                <li key={idx} className="flex items-start gap-2 text-sm text-zinc-300">
+                                    <CheckCircle size={14} className="text-secondary mt-0.5 shrink-0" />
+                                    <span>{tip}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Action button */}
                     {step.action && (
                         <button
                             onClick={handleAction}
-                            className="text-primary hover:underline text-sm mb-4 flex items-center gap-1 mx-auto"
+                            className="w-full py-3 bg-surfaceHighlight hover:bg-primary/20 border border-primary/30 rounded-xl text-primary text-sm font-medium flex items-center justify-center gap-2 transition-colors"
                         >
-                            {step.actionLabel} <ChevronRight size={14} />
+                            {step.actionLabel} <ChevronRight size={16} />
                         </button>
                     )}
                 </div>
 
                 {/* Navigation */}
-                <div className="flex gap-3 p-4 border-t border-surfaceHighlight">
+                <div className="flex gap-3 p-4 border-t border-surfaceHighlight bg-surface/50">
                     <Button
                         variant="secondary"
                         onClick={handlePrev}
@@ -173,7 +288,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     <Button onClick={handleNext} className="flex-1">
                         {isLastStep ? (
                             <>
-                                <CheckCircle size={18} /> Começar a Usar
+                                <RocketIcon size={18} /> Começar a Usar!
                             </>
                         ) : (
                             <>
