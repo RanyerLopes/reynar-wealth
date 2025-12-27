@@ -969,6 +969,77 @@ const Landing: React.FC = () => {
                 </div>
             </section>
 
+            {/* TESTIMONIALS */}
+            <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-[#050505] to-black">
+                <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                            O que nossos usuários dizem
+                        </h2>
+                        <p className="text-zinc-400">Mais de 10.000 pessoas já transformaram suas finanças</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[
+                            {
+                                name: "Marina Silva",
+                                role: "Empreendedora",
+                                avatar: "👩‍💼",
+                                text: "Finalmente consegui organizar as finanças da minha empresa e pessoais em um só lugar. A IA que lê boletos é incrível!",
+                                rating: 5
+                            },
+                            {
+                                name: "Carlos Eduardo",
+                                role: "Desenvolvedor",
+                                avatar: "👨‍💻",
+                                text: "O sistema de gamificação me motivou a economizar R$ 3.000 em 3 meses. Nunca fui tão organizado com dinheiro.",
+                                rating: 5
+                            },
+                            {
+                                name: "Ana Beatriz",
+                                role: "Estudante",
+                                avatar: "👩‍🎓",
+                                text: "Comecei no plano grátis e já consegui criar minha primeira meta de viagem. Interface linda e super fácil de usar!",
+                                rating: 5
+                            }
+                        ].map((testimonial, i) => (
+                            <div key={i} className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 hover:border-purple-500/30 transition-all">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center text-2xl">
+                                        {testimonial.avatar}
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-white">{testimonial.name}</p>
+                                        <p className="text-xs text-zinc-500">{testimonial.role}</p>
+                                    </div>
+                                </div>
+                                <p className="text-zinc-400 text-sm leading-relaxed mb-4">"{testimonial.text}"</p>
+                                <div className="flex gap-1">
+                                    {[...Array(testimonial.rating)].map((_, j) => (
+                                        <Star key={j} size={14} className="text-amber-400 fill-amber-400" />
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* GUARANTEE BADGE */}
+            <section className="py-16 px-4 bg-gradient-to-r from-purple-900/20 via-black to-purple-900/20 border-y border-purple-500/20">
+                <div className="max-w-3xl mx-auto text-center">
+                    <div className="inline-flex items-center gap-4 bg-black/50 border border-purple-500/30 rounded-2xl px-8 py-6">
+                        <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center">
+                            <Shield size={32} className="text-purple-400" />
+                        </div>
+                        <div className="text-left">
+                            <h3 className="text-xl font-bold text-white mb-1">Experimente Grátis por 7 Dias</h3>
+                            <p className="text-zinc-400 text-sm">Sem compromisso. Cancele quando quiser. Sem cobranças surpresa.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* FAQ */}
             <section className="py-24 px-4 md:px-6 max-w-2xl mx-auto">
                 <h2 className="text-2xl font-bold text-center mb-10 text-white">Dúvidas Comuns</h2>
@@ -992,19 +1063,95 @@ const Landing: React.FC = () => {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="py-10 text-center text-zinc-600 text-xs border-t border-white/5 bg-black">
-                <div className="flex items-center justify-center gap-2 mb-4 opacity-50">
-                    <ReynarLogo size={20} />
-                    <span className="font-bold text-zinc-500">Reynar Wealth</span>
+            {/* FINAL CTA */}
+            <section className="py-20 px-4 md:px-6 bg-gradient-to-b from-black to-purple-900/20 text-center">
+                <div className="max-w-2xl mx-auto">
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                        Pronto para assumir o controle?
+                    </h2>
+                    <p className="text-zinc-400 mb-8">
+                        Junte-se a milhares de pessoas que já transformaram sua vida financeira.
+                    </p>
+                    <Button
+                        className="!w-auto px-10 py-4 h-14 text-lg shadow-lg shadow-purple-500/30"
+                        onClick={handleRegister}
+                    >
+                        Começar Grátis por 7 Dias <ArrowRight size={20} className="ml-2" />
+                    </Button>
+                    <p className="text-xs text-zinc-600 mt-4">Não precisa de cartão de crédito</p>
                 </div>
-                <p className="mb-4">© 2024 Todos os direitos reservados.</p>
-                <div className="flex justify-center gap-6 opacity-50">
-                    <span className="hover:text-white cursor-pointer transition-colors">Termos de Uso</span>
-                    <span className="hover:text-white cursor-pointer transition-colors">Privacidade</span>
-                    <span className="hover:text-white cursor-pointer transition-colors">Suporte</span>
+            </section>
+
+            {/* Footer */}
+            <footer className="py-12 px-4 border-t border-white/5 bg-black">
+                <div className="max-w-5xl mx-auto">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+                        {/* Logo */}
+                        <div className="col-span-2 md:col-span-1">
+                            <div className="flex items-center gap-2 mb-4">
+                                <ReynarLogo size={24} />
+                                <span className="font-bold text-white">Reynar Wealth</span>
+                            </div>
+                            <p className="text-zinc-500 text-sm">
+                                Sua vida financeira em um único lugar, com IA e gamificação.
+                            </p>
+                        </div>
+
+                        {/* Links */}
+                        <div>
+                            <h4 className="font-medium text-white mb-4 text-sm">Produto</h4>
+                            <ul className="space-y-2 text-sm text-zinc-500">
+                                <li className="hover:text-white cursor-pointer transition-colors">Recursos</li>
+                                <li className="hover:text-white cursor-pointer transition-colors">Preços</li>
+                                <li className="hover:text-white cursor-pointer transition-colors">Integrações</li>
+                                <li className="hover:text-white cursor-pointer transition-colors">Changelog</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="font-medium text-white mb-4 text-sm">Empresa</h4>
+                            <ul className="space-y-2 text-sm text-zinc-500">
+                                <li className="hover:text-white cursor-pointer transition-colors">Sobre</li>
+                                <li className="hover:text-white cursor-pointer transition-colors">Blog</li>
+                                <li className="hover:text-white cursor-pointer transition-colors">Carreiras</li>
+                                <li className="hover:text-white cursor-pointer transition-colors">Contato</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="font-medium text-white mb-4 text-sm">Legal</h4>
+                            <ul className="space-y-2 text-sm text-zinc-500">
+                                <li className="hover:text-white cursor-pointer transition-colors">Termos de Uso</li>
+                                <li className="hover:text-white cursor-pointer transition-colors">Privacidade</li>
+                                <li className="hover:text-white cursor-pointer transition-colors">Segurança</li>
+                                <li className="hover:text-white cursor-pointer transition-colors">LGPD</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <p className="text-zinc-600 text-xs">© 2026 Reynar Wealth. Todos os direitos reservados.</p>
+                        <div className="flex gap-4">
+                            <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center hover:bg-white/10 cursor-pointer transition-colors">
+                                <Globe size={14} className="text-zinc-400" />
+                            </div>
+                            <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center hover:bg-white/10 cursor-pointer transition-colors">
+                                <Users size={14} className="text-zinc-400" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </footer>
+
+            {/* FLOATING CTA - Mobile */}
+            <div className="fixed bottom-20 left-4 right-4 md:hidden z-50 animate-slide-up">
+                <Button
+                    className="w-full h-14 text-base shadow-2xl shadow-purple-500/40"
+                    onClick={handleRegister}
+                >
+                    Experimente Grátis 7 Dias
+                </Button>
+            </div>
         </div>
     );
 };
