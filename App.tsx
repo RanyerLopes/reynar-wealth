@@ -14,6 +14,8 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Pricing from './pages/Pricing';
 import CheckoutSuccess from './pages/CheckoutSuccess';
+import Checkout from './pages/Checkout';
+import Subscription from './pages/Subscription';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import { Navigation } from './components/Navigation';
@@ -191,6 +193,8 @@ const AppLayout: React.FC = () => {
                 <Route path={AppRoutes.SETTINGS} element={<Settings onLogout={handleLogout} />} />
                 <Route path={AppRoutes.NOTIFICATIONS} element={<Notifications />} />
                 <Route path={AppRoutes.PROFILE} element={<Profile />} />
+                <Route path={AppRoutes.CHECKOUT} element={<Checkout />} />
+                <Route path={AppRoutes.SUBSCRIPTION} element={<Subscription />} />
 
                 {/* Default redirect */}
                 <Route path="/" element={<Navigate to={AppRoutes.DASHBOARD} replace />} />

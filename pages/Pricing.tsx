@@ -1,30 +1,18 @@
 
-import React, { useState } from 'react';
-import { Check, Star, Shield, Zap, CreditCard, Crown, ArrowRight, Lock, X, Sparkles } from 'lucide-react';
+import React from 'react';
+import { Check, Star, Shield, CreditCard, Crown, ArrowRight, Lock } from 'lucide-react';
 import { Card, Button } from '../components/UI';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '../types';
-import { redirectToCheckout, mockCheckout, PlanId } from '../services/stripeService';
-import { useAuth } from '../context/AuthContext';
+import { PlanId } from '../services/stripeService';
 
 const Pricing: React.FC = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
-    const [isRedirecting, setIsRedirecting] = useState<PlanId | null>(null);
 
     const currentPlan = localStorage.getItem('reynar_plan');
 
-    const handleStripeCheckout = (plan: PlanId) => {
-        setIsRedirecting(plan);
-
-        // Try to redirect to Stripe Payment Link
-        const redirected = redirectToCheckout(plan, user?.email || undefined);
-
-        if (!redirected) {
-            // Payment Links not configured - use mock checkout for demo
-            const successUrl = `${window.location.origin}/#${AppRoutes.CHECKOUT_SUCCESS}`;
-            mockCheckout(plan, successUrl);
-        }
+    const handleSelectPlan = (plan: PlanId) => {
+        navigate(`${AppRoutes.CHECKOUT}?plan=${plan}`);
     };
 
 
@@ -74,7 +62,7 @@ const Pricing: React.FC = () => {
                     <Button variant="secondary" className="flex-1" onClick={() => navigate(AppRoutes.DASHBOARD)}>
                         Ir para o Dashboard
                     </Button>
-                    <Button className="flex-1" onClick={() => handleStripeCheckout('pro')}>
+                    <Button className="flex-1" onClick={() => handleSelectPlan('pro')}>
                         <Crown size={16} /> Upgrade Pro
                     </Button>
                 </div>
@@ -137,7 +125,7 @@ const Pricing: React.FC = () => {
 
                         <Button
                             variant="secondary"
-                            onClick={() => handleStripeCheckout('plus')}
+                            onClick={() => handleSelectPlan('plus')}
                             isLoading={isRedirecting === 'plus'}
                             className="w-full h-12"
                         >
@@ -182,7 +170,7 @@ const Pricing: React.FC = () => {
 
                         <Button
                             variant="primary"
-                            onClick={() => handleStripeCheckout('pro')}
+                            onClick={() => handleSelectPlan('pro')}
                             isLoading={isRedirecting === 'pro'}
                             className="w-full h-12 shadow-[0_0_20px_rgba(251,191,36,0.3)] group-hover:shadow-[0_0_30px_rgba(251,191,36,0.5)]"
                         >

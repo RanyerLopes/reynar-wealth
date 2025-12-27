@@ -149,4 +149,6 @@ export enum AppRoutes {
   CHECKOUT_SUCCESS = '/success', // Rota simplificada
   NOTIFICATIONS = '/notifications',
   PROFILE = '/profile',
+  CHECKOUT = '/checkout',
+  SUBSCRIPTION = '/subscription',
 }
