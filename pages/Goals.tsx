@@ -291,7 +291,7 @@ const Goals: React.FC = () => {
                                             <div
                                                 key={i}
                                                 className={`w-1.5 h-1.5 rounded-full ${isUrgent ? 'bg-danger' :
-                                                        isNear ? 'bg-amber-500' : 'bg-primary'
+                                                    isNear ? 'bg-amber-500' : 'bg-primary'
                                                     }`}
                                             ></div>
                                         ))}
@@ -364,7 +364,7 @@ const Goals: React.FC = () => {
                     </div>
                 ) : (
                     <div className="border-t border-surfaceHighlight pt-6 pb-2 text-center">
-                        <Calendar size={32} className="mx-auto mb-2 text-textMuted opacity-30" />
+                        <Calendar size={32} className="mx-auto mb-2 text-primary/50" />
                         <p className="text-textMuted text-sm">Nenhuma meta vence neste mês</p>
                         <p className="text-xs text-textMuted mt-1">Use os botões ◀ ▶ para navegar</p>
                     </div>
