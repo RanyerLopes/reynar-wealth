@@ -144,11 +144,11 @@ const Checkout: React.FC = () => {
                 <span className="text-sm">Voltar para planos</span>
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
 
                 {/* LEFT: Order Summary */}
-                <div className="order-2 lg:order-1">
-                    <Card className={`border-2 ${isPro ? 'border-amber-400/30' : 'border-primary/30'}`}>
+                <div className="order-2 lg:order-1 flex flex-col">
+                    <Card className={`border-2 h-full flex flex-col ${isPro ? 'border-amber-400/30' : 'border-primary/30'}`}>
                         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                             <PlanIcon size={20} className={isPro ? 'text-amber-400 fill-amber-400' : 'text-primary'} />
                             Resumo do Pedido
@@ -179,8 +179,8 @@ const Checkout: React.FC = () => {
                                 <button
                                     onClick={() => setBillingCycle('monthly')}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${billingCycle === 'monthly'
-                                            ? 'bg-surface text-white shadow'
-                                            : 'text-textMuted hover:text-white'
+                                        ? 'bg-surface text-white shadow'
+                                        : 'text-textMuted hover:text-white'
                                         }`}
                                 >
                                     Mensal
@@ -188,8 +188,8 @@ const Checkout: React.FC = () => {
                                 <button
                                     onClick={() => setBillingCycle('yearly')}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all relative ${billingCycle === 'yearly'
-                                            ? 'bg-surface text-white shadow'
-                                            : 'text-textMuted hover:text-white'
+                                        ? 'bg-surface text-white shadow'
+                                        : 'text-textMuted hover:text-white'
                                         }`}
                                 >
                                     Anual
@@ -201,7 +201,7 @@ const Checkout: React.FC = () => {
                         </div>
 
                         {/* Price Summary */}
-                        <div className="border-t border-surfaceHighlight pt-4 space-y-3">
+                        <div className="border-t border-surfaceHighlight pt-4 space-y-3 mt-auto">
                             <div className="flex justify-between text-sm">
                                 <span className="text-textMuted">Subtotal</span>
                                 <span className="text-white">R$ {price.toFixed(2)}</span>
@@ -248,14 +248,14 @@ const Checkout: React.FC = () => {
                 </div>
 
                 {/* RIGHT: Payment Form */}
-                <div className="order-1 lg:order-2">
-                    <Card>
+                <div className="order-1 lg:order-2 flex flex-col">
+                    <Card className="h-full flex flex-col">
                         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                             <CreditCard size={20} className="text-primary" />
                             Dados do Pagamento
                         </h2>
 
-                        <form onSubmit={handleSubmit} className="space-y-5">
+                        <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
                             {/* Card Number */}
                             <div>
                                 <label className="text-xs font-medium text-textMuted uppercase tracking-wider block mb-1.5">
@@ -349,21 +349,23 @@ const Checkout: React.FC = () => {
                             </div>
 
                             {/* Submit Button */}
-                            <Button
-                                type="submit"
-                                isLoading={isProcessing}
-                                className={`w-full h-14 text-lg mt-6 ${isPro
+                            <div className="mt-auto pt-4">
+                                <Button
+                                    type="submit"
+                                    isLoading={isProcessing}
+                                    className={`w-full h-14 text-lg ${isPro
                                         ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/20'
                                         : ''
-                                    }`}
-                            >
-                                {isProcessing ? 'Processando...' : `Pagar R$ ${price.toFixed(2)}`}
-                            </Button>
+                                        }`}
+                                >
+                                    {isProcessing ? 'Processando...' : `Pagar R$ ${price.toFixed(2)}`}
+                                </Button>
 
-                            <p className="text-[10px] text-center text-textMuted mt-4">
-                                Ao clicar em "Pagar", você concorda com nossos Termos de Uso e Política de Privacidade.
-                                Cancele quando quiser.
-                            </p>
+                                <p className="text-[10px] text-center text-textMuted mt-4">
+                                    Ao clicar em "Pagar", você concorda com nossos Termos de Uso e Política de Privacidade.
+                                    Cancele quando quiser.
+                                </p>
+                            </div>
                         </form>
                     </Card>
                 </div>
