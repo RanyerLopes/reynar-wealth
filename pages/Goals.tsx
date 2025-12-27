@@ -387,69 +387,6 @@ const Goals: React.FC = () => {
                 </Card>
             </div>
 
-            {/* Goals Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {goals.map((goal) => {
-                    const percent = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
-                    const isCompleted = percent >= 100;
-
-                    return (
-                        <Card
-                            key={goal.id}
-                            onClick={() => openDetailModal(goal)}
-                            className={`transition-all duration-300 relative overflow-hidden flex flex-col cursor-pointer ${isCompleted ? 'border-secondary/50 bg-secondary/5' : ''}`}
-                        >
-                            <div className={`absolute top-0 left-0 w-1 h-full ${isCompleted ? 'bg-secondary' : goal.color}`}></div>
-
-                            <div className="flex justify-between items-start mb-4 pl-2">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner ${isCompleted ? 'bg-secondary/20' : 'bg-surfaceHighlight'}`}>
-                                    {isCompleted ? '🏆' : goal.icon}
-                                </div>
-                                <div className="bg-surfaceHighlight px-2 py-1 rounded-md text-[10px] text-textMuted flex items-center gap-1">
-                                    {isCompleted ? <CheckCircle size={10} className="text-secondary" /> : <Target size={10} />}
-                                    {isCompleted ? t('goals.completed') + '!' : format(goal.deadline, 'MMM yyyy')}
-                                </div>
-                            </div>
-
-                            <div className="pl-2 flex-1">
-                                <h3 className="font-bold text-lg text-textMain mb-1">{goal.name}</h3>
-                                <div className="flex justify-between items-end mb-2">
-                                    <span className={`text-2xl font-semibold ${isCompleted ? 'text-secondary' : 'text-white'}`}>
-                                        {formatCurrency(goal.currentAmount)}
-                                    </span>
-                                    <span className="text-xs text-textMuted mb-1">{t('goals.targetAmount')}: {formatCurrency(goal.targetAmount)}</span>
-                                </div>
-
-                                <div className="w-full bg-surfaceHighlight h-2.5 rounded-full overflow-hidden mb-4">
-                                    <div
-                                        className={`h-full ${isCompleted ? 'bg-secondary' : goal.color} transition-all duration-1000`}
-                                        style={{ width: `${percent}%` }}
-                                    ></div>
-                                </div>
-
-                                <div className="flex justify-between items-center text-xs text-textMuted font-medium mb-4">
-                                    <span>{isCompleted ? 'Objetivo alcançado!' : 'Falta pouco!'}</span>
-                                    <span>{percent.toFixed(0)}%</span>
-                                </div>
-                            </div>
-
-                            <Button
-                                variant="secondary"
-                                className={`mt-auto text-sm py-2 ${isCompleted ? 'bg-surfaceHighlight text-textMuted cursor-not-allowed' : ''}`}
-                                onClick={(e) => !isCompleted && openDepositModal(goal, e)}
-                                disabled={isCompleted}
-                            >
-                                {isCompleted ? t('goals.completed') : (
-                                    <>
-                                        <Plus size={16} /> {t('goals.deposit')}
-                                    </>
-                                )}
-                            </Button>
-                        </Card>
-                    );
-                })}
-            </div>
-
             {/* Modal: Create Goal */}
             {
                 isAddModalOpen && (
