@@ -1065,7 +1065,7 @@ const Landing: React.FC = () => {
 
             {/* FINAL CTA */}
             <section className="py-20 px-4 md:px-6 bg-gradient-to-b from-black to-purple-900/20 text-center">
-                <div className="max-w-2xl mx-auto">
+                <div className="max-w-2xl mx-auto flex flex-col items-center">
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                         Pronto para assumir o controle?
                     </h2>
