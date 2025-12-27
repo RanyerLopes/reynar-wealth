@@ -65,15 +65,14 @@ a {
   color: inherit;
 }
 
-/* Date input calendar icon - Make it visible on dark theme */
+/* Date input - Hide native calendar icon and use custom */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1) brightness(2);
-  opacity: 1 !important;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 100%;
   cursor: pointer;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
-  filter: invert(1) brightness(2.5);
 }
 
 /* Firefox and general date input styling */
@@ -81,11 +80,7 @@ input[type="date"] {
   color-scheme: dark;
 }
 
-/* Force white color on date input text */
-input[type="date"]::-webkit-datetime-edit {
-  color: white;
-}
-
-input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-  color: white;
+/* Custom class for date inputs */
+.date-input-custom {
+  position: relative;
 }

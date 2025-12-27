@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Calendar } from 'lucide-react';
 
 // --- HAPTIC FEEDBACK UTILITY ---
 export const vibrate = (pattern: number | number[] = 10) => {
@@ -97,6 +98,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLSe
 
 export const Input: React.FC<InputProps> = ({ label, icon, as = 'input', className = '', children, isCurrency, type, onChange, ...props }) => {
   const Component = as as any;
+  const isDateInput = type === 'date';
 
   // Handler to block negative values for currency inputs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +135,7 @@ export const Input: React.FC<InputProps> = ({ label, icon, as = 'input', classNa
           </div>
         )}
         <Component
-          className={`w-full bg-surfaceHighlight/50 border border-surfaceHighlight rounded-xl px-4 py-3 text-textMain placeholder-zinc-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all ${icon ? 'pl-10' : ''} ${className}`}
+          className={`w-full bg-surfaceHighlight/50 border border-surfaceHighlight rounded-xl px-4 py-3 text-textMain placeholder-zinc-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all ${icon ? 'pl-10' : ''} ${isDateInput ? 'date-input-custom pr-12' : ''} ${className}`}
           type={type}
           onChange={handleChange}
           {...currencyProps}
@@ -141,6 +143,12 @@ export const Input: React.FC<InputProps> = ({ label, icon, as = 'input', classNa
         >
           {children}
         </Component>
+        {/* Custom calendar icon for date inputs */}
+        {isDateInput && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white pointer-events-none">
+            <Calendar size={20} />
+          </div>
+        )}
       </div>
     </div>
   );
