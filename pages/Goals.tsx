@@ -194,182 +194,200 @@ const Goals: React.FC = () => {
                 <p className="text-white/80 text-sm max-w-md">{t('goals.buildingFuture')}</p>
             </div>
 
-            {/* Calendar Section */}
-            <Card className="overflow-hidden">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                        <Calendar size={20} className="text-primary" />
-                        Calendário de Metas
-                    </h3>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
-                            className="p-2 rounded-lg bg-surfaceHighlight text-textMuted hover:text-white hover:bg-primary/20 transition-colors"
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <span className="text-sm font-semibold text-white min-w-[140px] text-center capitalize">
-                            {format(calendarMonth, 'MMMM yyyy', { locale: ptBR })}
-                        </span>
-                        <button
-                            onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
-                            className="p-2 rounded-lg bg-surfaceHighlight text-textMuted hover:text-white hover:bg-primary/20 transition-colors"
-                        >
-                            <ChevronRight size={18} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Legend */}
-                <div className="flex flex-wrap items-center gap-4 mb-4 p-3 bg-surfaceHighlight/30 rounded-xl text-xs">
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full ring-2 ring-secondary"></div>
-                        <span className="text-textMuted">Hoje</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-danger"></div>
-                        <span className="text-textMuted">Urgente (≤7 dias)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                        <span className="text-textMuted">Próximo (≤30 dias)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-primary"></div>
-                        <span className="text-textMuted">Meta marcada</span>
-                    </div>
-                </div>
-
-                {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-1 mb-4">
-                    {/* Day headers */}
-                    {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-                        <div key={day} className="text-center text-xs text-textMuted font-medium py-2">
-                            {day}
-                        </div>
-                    ))}
-
-                    {/* Empty cells for days before month start */}
-                    {Array.from({ length: getDay(startOfMonth(calendarMonth)) }).map((_, i) => (
-                        <div key={`empty-${i}`} className="aspect-square"></div>
-                    ))}
-
-                    {/* Days of month */}
-                    {getDaysInMonth().map(day => {
-                        const dayGoals = getGoalsForDay(day);
-                        const hasGoals = dayGoals.length > 0;
-                        const isToday = isSameDay(day, new Date());
-
-                        // Calculate urgency based on days until deadline
-                        const daysUntil = Math.ceil((day.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                        const isUrgent = hasGoals && daysUntil >= 0 && daysUntil <= 7;
-                        const isNear = hasGoals && daysUntil > 7 && daysUntil <= 30;
-
-                        // Get progress for tooltip
-                        const goalProgress = hasGoals ? dayGoals.map(g => {
-                            const pct = Math.min((g.currentAmount / g.targetAmount) * 100, 100).toFixed(0);
-                            return `${g.icon} ${g.name} (${pct}%)`;
-                        }).join('\n') : '';
-
-                        return (
-                            <div
-                                key={day.toISOString()}
-                                className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-all relative group
-                                    ${isUrgent ? 'bg-danger/20 text-danger font-bold cursor-pointer hover:bg-danger/30' :
-                                        isNear ? 'bg-amber-500/20 text-amber-400 font-bold cursor-pointer hover:bg-amber-500/30' :
-                                            hasGoals ? 'bg-primary/20 text-primary font-bold cursor-pointer hover:bg-primary/30' :
-                                                'text-textMuted hover:bg-surfaceHighlight'}
-                                    ${isToday ? 'ring-2 ring-secondary' : ''}
-                                `}
-                                onClick={() => hasGoals && openDetailModal(dayGoals[0])}
-                                title={goalProgress}
+            {/* Calendar + Goals Side by Side */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* LEFT: Calendar */}
+                <Card className="overflow-hidden">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-lg text-white flex items-center gap-2">
+                            <Calendar size={20} className="text-primary" />
+                            Calendário
+                        </h3>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
+                                className="p-2 rounded-lg bg-surfaceHighlight text-textMuted hover:text-white hover:bg-primary/20 transition-colors"
                             >
-                                {format(day, 'd')}
-                                {hasGoals && (
-                                    <div className="absolute bottom-1 flex gap-0.5">
-                                        {dayGoals.slice(0, 3).map((g, i) => (
-                                            <div
-                                                key={i}
-                                                className={`w-1.5 h-1.5 rounded-full ${isUrgent ? 'bg-danger' :
-                                                    isNear ? 'bg-amber-500' : 'bg-primary'
-                                                    }`}
-                                            ></div>
-                                        ))}
-                                    </div>
-                                )}
+                                <ChevronLeft size={18} />
+                            </button>
+                            <span className="text-sm font-semibold text-white min-w-[120px] text-center capitalize">
+                                {format(calendarMonth, 'MMM yyyy', { locale: ptBR })}
+                            </span>
+                            <button
+                                onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
+                                className="p-2 rounded-lg bg-surfaceHighlight text-textMuted hover:text-white hover:bg-primary/20 transition-colors"
+                            >
+                                <ChevronRight size={18} />
+                            </button>
+                        </div>
+                    </div>
 
-                                {/* Hover tooltip for desktop */}
-                                {hasGoals && (
-                                    <div className="hidden group-hover:block absolute z-20 bottom-full mb-2 left-1/2 -translate-x-1/2 bg-surface border border-surfaceHighlight rounded-lg p-2 shadow-xl whitespace-nowrap text-xs">
-                                        {dayGoals.map(g => (
-                                            <div key={g.id} className="flex items-center gap-2 py-0.5">
-                                                <span>{g.icon}</span>
-                                                <span className="text-white">{g.name}</span>
-                                                <span className="text-textMuted">
-                                                    {Math.min((g.currentAmount / g.targetAmount) * 100, 100).toFixed(0)}%
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                    {/* Legend - Compact */}
+                    <div className="flex flex-wrap items-center gap-3 mb-3 text-[10px]">
+                        <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full ring-2 ring-secondary"></div>
+                            <span className="text-textMuted">Hoje</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-danger"></div>
+                            <span className="text-textMuted">Urgente</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                            <span className="text-textMuted">Próximo</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-primary"></div>
+                            <span className="text-textMuted">Meta</span>
+                        </div>
+                    </div>
+
+                    {/* Calendar Grid */}
+                    <div className="grid grid-cols-7 gap-1">
+                        {/* Day headers */}
+                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => (
+                            <div key={i} className="text-center text-[10px] text-textMuted font-medium py-1">
+                                {day}
                             </div>
-                        );
-                    })}
-                </div>
+                        ))}
 
-                {/* Goals for this month OR empty state */}
-                {getGoalsForMonth().length > 0 ? (
-                    <div className="border-t border-surfaceHighlight pt-4">
-                        <p className="text-xs text-textMuted mb-2 uppercase tracking-wider font-semibold">
-                            Metas deste mês ({getGoalsForMonth().length})
-                        </p>
-                        <div className="space-y-2">
-                            {getGoalsForMonth().map(goal => {
-                                const daysUntil = Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                                const isUrgent = daysUntil >= 0 && daysUntil <= 7;
-                                const isNear = daysUntil > 7 && daysUntil <= 30;
+                        {/* Empty cells for days before month start */}
+                        {Array.from({ length: getDay(startOfMonth(calendarMonth)) }).map((_, i) => (
+                            <div key={`empty-${i}`} className="aspect-square"></div>
+                        ))}
+
+                        {/* Days of month */}
+                        {getDaysInMonth().map(day => {
+                            const dayGoals = getGoalsForDay(day);
+                            const hasGoals = dayGoals.length > 0;
+                            const isToday = isSameDay(day, new Date());
+                            const daysUntil = Math.ceil((day.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                            const isUrgent = hasGoals && daysUntil >= 0 && daysUntil <= 7;
+                            const isNear = hasGoals && daysUntil > 7 && daysUntil <= 30;
+
+                            return (
+                                <div
+                                    key={day.toISOString()}
+                                    className={`aspect-square flex flex-col items-center justify-center rounded-lg text-xs transition-all relative
+                                        ${isUrgent ? 'bg-danger/20 text-danger font-bold cursor-pointer hover:bg-danger/30' :
+                                            isNear ? 'bg-amber-500/20 text-amber-400 font-bold cursor-pointer hover:bg-amber-500/30' :
+                                                hasGoals ? 'bg-primary/20 text-primary font-bold cursor-pointer hover:bg-primary/30' :
+                                                    'text-textMuted hover:bg-surfaceHighlight'}
+                                        ${isToday ? 'ring-2 ring-secondary' : ''}
+                                    `}
+                                    onClick={() => hasGoals && openDetailModal(dayGoals[0])}
+                                    title={hasGoals ? dayGoals.map(g => g.name).join(', ') : ''}
+                                >
+                                    {format(day, 'd')}
+                                    {hasGoals && (
+                                        <div className="absolute bottom-0.5 flex gap-0.5">
+                                            {dayGoals.slice(0, 2).map((_, i) => (
+                                                <div
+                                                    key={i}
+                                                    className={`w-1 h-1 rounded-full ${isUrgent ? 'bg-danger' : isNear ? 'bg-amber-500' : 'bg-primary'}`}
+                                                ></div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Goals for this month */}
+                    {getGoalsForMonth().length > 0 && (
+                        <div className="border-t border-surfaceHighlight mt-4 pt-3">
+                            <p className="text-[10px] text-textMuted mb-2 uppercase tracking-wider font-semibold">
+                                Vencendo este mês
+                            </p>
+                            <div className="space-y-1.5">
+                                {getGoalsForMonth().slice(0, 3).map(goal => (
+                                    <div
+                                        key={goal.id}
+                                        onClick={() => openDetailModal(goal)}
+                                        className="flex items-center gap-2 p-2 bg-surfaceHighlight rounded-lg cursor-pointer hover:border-primary border border-transparent transition-all text-xs"
+                                    >
+                                        <span>{goal.icon}</span>
+                                        <span className="text-white flex-1 truncate">{goal.name}</span>
+                                        <span className="text-textMuted">{format(new Date(goal.deadline), 'dd/MM')}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </Card>
+
+                {/* RIGHT: All Goals List with Deposit Button */}
+                <Card className="overflow-hidden">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-lg text-white flex items-center gap-2">
+                            <Target size={20} className="text-secondary" />
+                            Suas Metas
+                        </h3>
+                        <span className="text-xs text-textMuted bg-surfaceHighlight px-2 py-1 rounded-full">
+                            {goals.length} {goals.length === 1 ? 'meta' : 'metas'}
+                        </span>
+                    </div>
+
+                    {goals.length === 0 ? (
+                        <div className="text-center py-8">
+                            <Target size={40} className="mx-auto mb-3 text-textMuted opacity-30" />
+                            <p className="text-textMuted text-sm mb-3">Nenhuma meta criada ainda</p>
+                            <Button className="!w-auto px-4 py-2" onClick={() => setIsAddModalOpen(true)}>
+                                <Plus size={16} /> Criar Primeira Meta
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
+                            {goals.map(goal => {
                                 const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+                                const isCompleted = progress >= 100;
 
                                 return (
                                     <div
                                         key={goal.id}
-                                        onClick={() => openDetailModal(goal)}
-                                        className={`flex items-center justify-between p-3 rounded-xl cursor-pointer border transition-all
-                                            ${isUrgent ? 'bg-danger/10 border-danger/30 hover:border-danger' :
-                                                isNear ? 'bg-amber-500/10 border-amber-500/30 hover:border-amber-500' :
-                                                    'bg-surfaceHighlight border-transparent hover:border-primary'}
-                                        `}
+                                        className={`p-3 rounded-xl border transition-all ${isCompleted ? 'bg-secondary/5 border-secondary/30' : 'bg-surfaceHighlight border-transparent'}`}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-xl">{goal.icon}</span>
-                                            <div>
-                                                <p className="text-sm font-medium text-white flex items-center gap-2">
-                                                    {goal.name}
-                                                    {isUrgent && <span className="text-[10px] bg-danger/20 text-danger px-1.5 py-0.5 rounded">URGENTE</span>}
-                                                </p>
+                                        {/* Goal Info */}
+                                        <div className="flex items-start gap-3 mb-2" onClick={() => openDetailModal(goal)}>
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${isCompleted ? 'bg-secondary/20' : 'bg-surface'}`}>
+                                                {isCompleted ? '🏆' : goal.icon}
+                                            </div>
+                                            <div className="flex-1 min-w-0 cursor-pointer">
+                                                <p className="font-medium text-white truncate">{goal.name}</p>
                                                 <p className="text-xs text-textMuted">
-                                                    Vence em {format(new Date(goal.deadline), 'dd/MM')} • {progress.toFixed(0)}% concluído
+                                                    {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
                                                 </p>
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className={`text-sm font-semibold ${isUrgent ? 'text-danger' : isNear ? 'text-amber-400' : 'text-primary'}`}>
-                                                {formatCurrency(goal.targetAmount)}
+                                            <span className={`text-sm font-bold ${isCompleted ? 'text-secondary' : 'text-primary'}`}>
+                                                {progress.toFixed(0)}%
                                             </span>
                                         </div>
+
+                                        {/* Progress Bar */}
+                                        <div className="w-full bg-surface h-2 rounded-full overflow-hidden mb-2">
+                                            <div
+                                                className={`h-full ${isCompleted ? 'bg-secondary' : 'bg-primary'} transition-all duration-500`}
+                                                style={{ width: `${progress}%` }}
+                                            ></div>
+                                        </div>
+
+                                        {/* Quick Deposit Button */}
+                                        {!isCompleted && (
+                                            <button
+                                                onClick={(e) => openDepositModal(goal, e)}
+                                                className="w-full py-2 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                            >
+                                                <Plus size={14} /> Depositar
+                                            </button>
+                                        )}
                                     </div>
                                 );
                             })}
                         </div>
-                    </div>
-                ) : (
-                    <div className="border-t border-surfaceHighlight pt-6 pb-2 text-center">
-                        <Calendar size={32} className="mx-auto mb-2 text-primary/50" />
-                        <p className="text-textMuted text-sm">Nenhuma meta vence neste mês</p>
-                        <p className="text-xs text-textMuted mt-1">Use os botões ◀ ▶ para navegar</p>
-                    </div>
-                )}
-            </Card>
+                    )}
+                </Card>
+            </div>
 
             {/* Goals Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
